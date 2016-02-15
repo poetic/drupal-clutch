@@ -14,8 +14,8 @@ use Drupal\Core\Render\BubbleableMetadata;
  */
 function custom_page_token_info() {
   $type = array(
-    'name' => t('Custom Page'),
-    'description' => t('Tokens related to individual content items, or "Custom Pages".'),
+    'name' => t('Page'),
+    'description' => t('Tokens related to individual content items, or "Pages".'),
     'needs-data' => 'custom_page',
   );
 

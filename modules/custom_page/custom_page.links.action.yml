@@ -1,6 +1,6 @@
 entity.custom_page.add_form:
   route_name: entity.custom_page.add_form
-  title: 'Add Custom page'
+  title: 'Add Page'
   appears_on:
     - entity.custom_page.collection
     - entity.custom_page.canonical
