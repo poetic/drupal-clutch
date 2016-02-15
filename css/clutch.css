@@ -1,0 +1,12 @@
+.update-bundles label {
+	color: red;
+	font-style: italic;
+}
+
+.disabled{
+	opacity: 0.5;
+}
+
+.disabled label {
+	cursor: default !important;
+}

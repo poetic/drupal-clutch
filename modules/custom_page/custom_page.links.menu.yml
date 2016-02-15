@@ -1,0 +1,13 @@
+# Custom page menu items definition
+entity.custom_page.collection:
+  title: 'Custom page list'
+  route_name: entity.custom_page.collection
+  description: 'List Custom page entities'
+  parent: system.admin_structure
+  weight: 100
+
+custom_page.admin.structure.settings:
+  title: Custom page settings
+  description: 'Configure Custom page entities'
+  route_name: custom_page.settings
+  parent: system.admin_structure

@@ -1,0 +1,5 @@
+id: custom_page
+label: 'Custom Page'
+tags:
+  description: '[custom_page:meta_description]'
+  title: '[custom_page:meta_title] | [site:name]'

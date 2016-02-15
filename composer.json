@@ -1,0 +1,16 @@
+{
+  "name": "drupal/clutch",
+  "type": "drupal-module",
+  "description": "Poetic Systems awesome website conversion module.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/clutch",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/clutch",
+    "source": "http://cgit.drupalcode.org/clutch"
+  },
+  "require": {
+    "wa72/htmlpagedom": "^1.2"
+  }
+}

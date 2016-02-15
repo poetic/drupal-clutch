@@ -1,0 +1,20 @@
+# Custom page routing definition
+custom_page.settings_tab:
+  route_name: custom_page.settings
+  title: 'Settings'
+  base_route: custom_page.settings
+entity.custom_page.canonical:
+  route_name: entity.custom_page.canonical
+  base_route: entity.custom_page.canonical
+  title: 'View'
+
+entity.custom_page.edit_form:
+  route_name: entity.custom_page.edit_form
+  base_route: entity.custom_page.canonical
+  title: Edit
+
+entity.custom_page.delete_form:
+  route_name:  entity.custom_page.delete_form
+  base_route:  entity.custom_page.canonical
+  title: Delete
+  weight: 10

@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * @file
+ * Contains custom_page.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_help().
+ */
+function custom_page_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the custom_page module.
+    case 'help.page.custom_page':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Create one of page. Replacement for Page Manager.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function custom_page_theme() {
+	$theme = [];
+	$theme['custom_page'] = [
+		'render element' => 'elements',
+		'file' => 'custom_page.page.inc',
+		'template' => 'custom_page'
+	];
+	return $theme;
+}
+
+/**
+ * Implements hook_install().
+ */
+function custom_page_install() {
+  $field_storage = FieldStorageConfig::create([
+    'field_name' => 'associated_components',
+    'entity_type' => 'custom_page',
+    'type' => 'entity_reference',
+    'cardinality' => -1,
+    'custom_storage' => FALSE,
+    'settings' => array(
+      'target_type' => 'component'
+    ),
+  ]);
+
+  $field_storage->save();
+
+  $field_instance = FieldConfig::create([
+    'field_storage' => $field_storage,
+    'bundle' => 'custom_page',
+    'label' => 'Associated Components',
+  ]);
+
+  $field_instance->save();
+
+  // entity_get_form_display('custom_page', 'custom_page', 'default')
+  //   ->setComponent('associated_components', array(
+  //     'type' => 'entity_reference_autocomplete',
+  //   ))
+  //   ->save();
+
+  // Assign display settings for 'default' view mode.
+  entity_get_display('custom_page', 'custom_page', 'default')
+    ->setComponent('associated_components', array(
+      'label' => 'hidden',
+      'type' => 'entity_reference_entity_view',
+    ))
+    ->save();
+}

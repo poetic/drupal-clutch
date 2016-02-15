@@ -1,0 +1,14 @@
+{
+  "name": "drupal/custom_page",
+  "type": "drupal-module",
+  "description": "Create one of page. Replacement for Page Manager.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/custom_page",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/custom_page",
+    "source": "http://cgit.drupalcode.org/custom_page"
+  },
+  "require": { }
+}

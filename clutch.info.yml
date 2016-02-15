@@ -1,0 +1,7 @@
+name: Clutch
+type: module
+description: Poetic Systems awesome website conversion module.
+core: 8.x
+package: Clutch
+dependencies:
+  - custom_page

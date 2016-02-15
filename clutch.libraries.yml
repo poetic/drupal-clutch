@@ -1,0 +1,9 @@
+clutch:
+  version: VERSION
+  css:
+    base:
+      css/clutch.css: {}
+  js:
+    js/clutch.js: {}
+  dependencies:
+    - core/jquery

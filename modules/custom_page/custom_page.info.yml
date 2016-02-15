@@ -1,0 +1,7 @@
+name: Clutch: Custom Page
+type: module
+description: Create pages.
+core: 8.x
+package: Clutch
+dependencies:
+  - component

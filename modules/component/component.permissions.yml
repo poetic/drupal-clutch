@@ -1,0 +1,19 @@
+add component entities:
+  title: 'Create new Component entities'
+
+administer component entities:
+  title: 'Administer Component entities'
+  description: 'Allow to access the administration form to configure Component entities.'
+  restrict access: true
+
+delete component entities:
+  title: 'Delete Component entities'
+
+edit component entities:
+  title: 'Edit Component entities'
+
+view published component entities:
+  title: 'View published Component entities'
+
+view unpublished component entities:
+  title: 'View unpublished Component entities'

@@ -1,0 +1,17 @@
+# Component routing definition
+entity.component.canonical:
+  route_name: entity.component.canonical
+  base_route: entity.component.canonical
+  title: 'View'
+
+entity.component.edit_form:
+  route_name: entity.component.edit_form
+  base_route: entity.component.canonical
+  title: Edit
+
+entity.component.delete_form:
+  route_name:  entity.component.delete_form
+  base_route:  entity.component.canonical
+  title: Delete
+  weight: 10
+

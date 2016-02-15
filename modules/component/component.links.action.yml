@@ -1,0 +1,13 @@
+entity.component.add_form:
+  route_name: 'component.add_page'
+  title: 'Add Component'
+  appears_on:
+    - entity.component.collection
+    - entity.component.canonical
+
+entity.component_type.add_form:
+  route_name: 'entity.component_type.add_form'
+  title: 'Add Component type'
+  appears_on:
+    - entity.component_type.collection
+

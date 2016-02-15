@@ -1,0 +1,19 @@
+add custom page entities:
+  title: 'Create new Custom page entities'
+
+administer custom page entities:
+  title: 'Administer Custom page entities'
+  description: 'Allow to access the administration form to configure Custom page entities.'
+  restrict access: true
+
+delete custom page entities:
+  title: 'Delete Custom page entities'
+
+edit custom page entities:
+  title: 'Edit Custom page entities'
+
+view published custom page entities:
+  title: 'View published Custom page entities'
+
+view unpublished custom page entities:
+  title: 'View unpublished Custom page entities'
