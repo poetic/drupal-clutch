@@ -22,8 +22,8 @@ class CustomPageViewsData extends EntityViewsData implements EntityViewsDataInte
 
     $data['custom_page']['table']['base'] = array(
       'field' => 'id',
-      'title' => $this->t('Custom page'),
-      'help' => $this->t('The Custom page ID.'),
+      'title' => $this->t('Page'),
+      'help' => $this->t('The Page ID.'),
     );
 
     return $data;

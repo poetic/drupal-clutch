@@ -53,7 +53,7 @@ class CustomPageSettingsForm extends FormBase {
    *   Form definition array.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['CustomPage_settings']['#markup'] = 'Settings form for Custom page entities. Manage field settings here.';
+    $form['CustomPage_settings']['#markup'] = 'Settings form for Page entities. Manage field settings here.';
     return $form;
   }
 
