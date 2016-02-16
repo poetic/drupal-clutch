@@ -14,7 +14,7 @@ Go here to view:
   - Component Type List: `admin/config/search/path/patterns/custom_page`
   - Component List `admin/structure/component`
 
-## Custom Page (Page_)
+## Custom Page (Page)
 Custom Page allows you to create pages as a replacement for Page Manger. Even though pathauto pattern is already implemented, you need to resave custom page pattern at `/admin/config/search/path/patterns/custom_page` to activate it.
 Will research on how to automate this.
 
