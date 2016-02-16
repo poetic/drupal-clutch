@@ -32,8 +32,13 @@ class ClutchAPIForm extends FormBase {
     $listing_bundles = '';
     $existing_bundles = $this->getExistingBundles();
     $clutch_builder = new ClutchBuilder();
-    $theme_array = $clutch_builder->getFrontTheme();
+    $theme_array = $clutch_builder->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
+    $components_dir = $theme_path . '/components/';
+    if(!is_dir($components_dir)) {
+      drupal_set_message('Your theme is missing the components directory. Please update and try again!');
+      return;
+    }
     $components_dir = scandir($theme_path . '/components/');
     $bundles_from_theme_directory = array();
     foreach ($components_dir as $dir) {
@@ -186,7 +191,7 @@ class ClutchAPIForm extends FormBase {
     }
     $clutch_builder = new ClutchBuilder();
     $clutch_builder->createEntitiesFromTemplate($bundles);
-    // dpm('Create Entity');
+    drupal_set_message('Create Entity');
   }
 
   public function deleteComponents(array &$form, FormStateInterface $form_state) {
@@ -197,7 +202,7 @@ class ClutchAPIForm extends FormBase {
     }
     $clutch_builder = new ClutchBuilder();
     $clutch_builder->deleteEntities($bundles);
-    // dpm('Delete Entity');
+    drupal_set_message('Delete Entity');
   }
 
   public function updateComponents(array &$form, FormStateInterface $form_state) {
@@ -208,7 +213,7 @@ class ClutchAPIForm extends FormBase {
       array_pop($bundles);
     }
     $clutch_builder->updateEntities($bundles);
-    // dpm('Update Entity');
+    drupal_set_message('Update Entity');
   }
 
   public function getExistingBundles() {

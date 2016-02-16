@@ -31,11 +31,11 @@ class ClutchBuilder {
    *   Return html string from template
    */
   protected function getHTMLTemplate($template) {
-    $theme_array = $this->getFrontTheme();
+    $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     $twig_service = \Drupal::service('twig');
     // $template name has the same name of directory that holds the template
-    // pass null array to pass validation. we don't need to replace any variables. this only return 
+    // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
     return $twig_service->loadTemplate($theme_path.'/components/'.$template.'/'.$template.'.html.twig')->render(array());
   }
@@ -182,7 +182,7 @@ class ClutchBuilder {
   }
 
   /**
-   * Clean up page after deleting component. 
+   * Clean up page after deleting component.
    * Page still references non existing component therefore breaks rendering function
    *
    * @param $component_id
@@ -321,9 +321,7 @@ class ClutchBuilder {
     $component->save();
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
-        
         $settings['file_directory'] = 'components/[date:custom:Y]-[date:custom:m]';
-
         $image = File::create();
         $image->setFileUri($field['value']);
         $image->setOwnerId(\Drupal::currentUser()->id());
@@ -547,15 +545,15 @@ class ClutchBuilder {
   }
   /**
    * Get front end theme directory
-   * @return 
+   * @return
    *  an array of theme namd and theme path
    */
-  public function getFrontTheme() {
+  public function getCustomTheme() {
     $themes = system_list('theme');
     foreach($themes as $theme) {
       if($theme->origin !== 'core') {
         return [$theme->getName() => $theme->getPath()];
-      } 
+      }
     }
   }
 }
