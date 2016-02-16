@@ -7,7 +7,7 @@ entity.custom_page.collection:
   weight: 100
 
 custom_page.admin.structure.settings:
-  title: Custom page settings
+  title: 'Page settings'
   description: 'Configure Page entities'
   route_name: custom_page.settings
   parent: system.admin_structure
