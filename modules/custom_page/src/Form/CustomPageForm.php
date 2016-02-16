@@ -43,13 +43,13 @@ class CustomPageForm extends ContentEntityForm {
 
     switch ($status) {
       case SAVED_NEW:
-        drupal_set_message($this->t('Created the %label Custom page.', [
+        drupal_set_message($this->t('Created the %label Page.', [
           '%label' => $entity->label(),
         ]));
         break;
 
       default:
-        drupal_set_message($this->t('Saved the %label Custom page.', [
+        drupal_set_message($this->t('Saved the %label Page.', [
           '%label' => $entity->label(),
         ]));
     }

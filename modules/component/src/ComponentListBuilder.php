@@ -25,6 +25,7 @@ class ComponentListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header['id'] = $this->t('Component ID');
     $header['name'] = $this->t('Name');
+    $header['uuid'] = $this->t('Component UUID');
     return $header + parent::buildHeader();
   }
 
@@ -42,6 +43,7 @@ class ComponentListBuilder extends EntityListBuilder {
         )
       )
     );
+    $row['uuid'] = $entity->uuid();
     return $row + parent::buildRow($entity);
   }
 

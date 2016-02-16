@@ -22,7 +22,7 @@ use Drupal\user\UserInterface;
  *
  * @ContentEntityType(
  *   id = "custom_page",
- *   label = @Translation("Custom page"),
+ *   label = @Translation("Page"),
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\custom_page\CustomPageListBuilder",
@@ -40,7 +40,7 @@ use Drupal\user\UserInterface;
  *     },
  *   },
  *   base_table = "custom_page",
- *   admin_permission = "administer custom page entities",
+ *   admin_permission = "administer Page entities",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "name",
@@ -179,16 +179,16 @@ class CustomPage extends ContentEntityBase implements CustomPageInterface {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
-      ->setDescription(t('The ID of the Custom page entity.'))
+      ->setDescription(t('The ID of the Page entity.'))
       ->setReadOnly(TRUE);
     $fields['uuid'] = BaseFieldDefinition::create('uuid')
       ->setLabel(t('UUID'))
-      ->setDescription(t('The UUID of the Custom page entity.'))
+      ->setDescription(t('The UUID of the Page entity.'))
       ->setReadOnly(TRUE);
 
     $fields['user_id'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Authored by'))
-      ->setDescription(t('The user ID of author of the Custom page entity.'))
+      ->setDescription(t('The user ID of author of the Page entity.'))
       ->setRevisionable(TRUE)
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
@@ -214,7 +214,7 @@ class CustomPage extends ContentEntityBase implements CustomPageInterface {
 
     $fields['name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Name'))
-      ->setDescription(t('The name of the Custom page entity.'))
+      ->setDescription(t('The name of the Page entity.'))
       ->setSettings(array(
         'max_length' => 50,
         'text_processing' => 0,
@@ -271,12 +271,12 @@ class CustomPage extends ContentEntityBase implements CustomPageInterface {
 
     $fields['status'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Publishing status'))
-      ->setDescription(t('A boolean indicating whether the Custom page is published.'))
+      ->setDescription(t('A boolean indicating whether the Page is published.'))
       ->setDefaultValue(TRUE);
 
     $fields['langcode'] = BaseFieldDefinition::create('language')
       ->setLabel(t('Language code'))
-      ->setDescription(t('The language code for the Custom page entity.'))
+      ->setDescription(t('The language code for the Page entity.'))
       ->setDisplayOptions('form', array(
         'type' => 'language_select',
         'weight' => 10,

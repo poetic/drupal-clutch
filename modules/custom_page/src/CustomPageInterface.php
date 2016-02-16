@@ -21,10 +21,10 @@ interface CustomPageInterface extends ContentEntityInterface, EntityChangedInter
   // Add get/set methods for your configuration properties here.
 
   /**
-   * Gets the Custom page name.
+   * Gets the Page name.
    *
    * @return string
-   *   Name of the Custom page.
+   *   Name of the Page.
    */
   public function getName();
 
@@ -35,26 +35,26 @@ interface CustomPageInterface extends ContentEntityInterface, EntityChangedInter
    *   The Custom page name.
    *
    * @return \Drupal\custom_page\CustomPageInterface
-   *   The called Custom page entity.
+   *   The called Page entity.
    */
   public function setName($name);
 
   /**
-   * Gets the Custom page path.
+   * Gets the Page path.
    *
    * @return string path
-   *   Path of the Custom page.
+   *   Path of the Page.
    */
   public function getPath();
 
   /**
-   * Sets the Custom page path.
+   * Sets the Page path.
    *
    * @param string $path
-   *   The Custom page path.
+   *   The Page path.
    *
    * @return \Drupal\custom_page\CustomPageInterface
-   *   The called Custom page entity.
+   *   The called Page entity.
    */
   public function setPath($path);
 
@@ -93,7 +93,7 @@ interface CustomPageInterface extends ContentEntityInterface, EntityChangedInter
    *   The Custom page metatag page description
    *
    * @return \Drupal\custom_page\CustomPageInterface
-   *   The called Custom page entity.
+   *   The called Page entity.
    */
   public function setMetaDescription($meta_description);
 
@@ -101,39 +101,39 @@ interface CustomPageInterface extends ContentEntityInterface, EntityChangedInter
    * Gets the Custom page creation timestamp.
    *
    * @return int
-   *   Creation timestamp of the Custom page.
+   *   Creation timestamp of the Page.
    */
   public function getCreatedTime();
 
   /**
-   * Sets the Custom page creation timestamp.
+   * Sets the Page creation timestamp.
    *
    * @param int $timestamp
-   *   The Custom page creation timestamp.
+   *   The Page creation timestamp.
    *
    * @return \Drupal\custom_page\CustomPageInterface
-   *   The called Custom page entity.
+   *   The called Page entity.
    */
   public function setCreatedTime($timestamp);
 
   /**
-   * Returns the Custom page published status indicator.
+   * Returns the Page published status indicator.
    *
    * Unpublished Custom page are only visible to restricted users.
    *
    * @return bool
-   *   TRUE if the Custom page is published.
+   *   TRUE if the Page is published.
    */
   public function isPublished();
 
   /**
-   * Sets the published status of a Custom page.
+   * Sets the published status of a Page.
    *
    * @param bool $published
-   *   TRUE to set this Custom page to published, FALSE to set it to unpublished.
+   *   TRUE to set this Page to published, FALSE to set it to unpublished.
    *
    * @return \Drupal\custom_page\CustomPageInterface
-   *   The called Custom page entity.
+   *   The called Page entity.
    */
   public function setPublished($published);
 

@@ -13,7 +13,7 @@ use Drupal\Core\Routing\LinkGeneratorTrait;
 use Drupal\Core\Url;
 
 /**
- * Defines a class to build a listing of Custom page entities.
+ * Defines a class to build a listing of Page entities.
  *
  * @ingroup custom_page
  */
@@ -23,8 +23,9 @@ class CustomPageListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['id'] = $this->t('Custom page ID');
+    $header['id'] = $this->t('Page ID');
     $header['name'] = $this->t('Name');
+    $header['uuid'] = $this->t('Page UUID');
     return $header + parent::buildHeader();
   }
 
@@ -42,6 +43,7 @@ class CustomPageListBuilder extends EntityListBuilder {
         )
       )
     );
+    $row['uuid'] = $entity->uuid();
     return $row + parent::buildRow($entity);
   }
 
