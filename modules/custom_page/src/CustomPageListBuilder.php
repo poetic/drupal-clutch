@@ -43,7 +43,7 @@ class CustomPageListBuilder extends EntityListBuilder {
         )
       )
     );
-    $row['uuid'] = $this->uuid();
+    $row['uuid'] = $entity->uuid();
     return $row + parent::buildRow($entity);
   }
 
