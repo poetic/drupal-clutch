@@ -1,5 +1,6 @@
 Clutch
 ========
+![clutch_logo](https://github.com/poetic/clutch/blob/features/readme/assets/clutch.png)
 
 A super module that will help speeding up website conversion from Webflow design. Clutch allows you to create pages and attach multiple components(bands) on pages.
 
