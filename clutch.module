@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_help().
@@ -21,4 +23,35 @@ function clutch_help($route_name, RouteMatchInterface $route_match) {
 
     default:
   }
+}
+
+/**
+ * Implements hook_install().
+ */
+function clutch_install() {
+  $bundle = entity_create('component_type', array(
+    'id' => 'views_reference',
+    'label' => 'Views Reference',
+    revision' => FALSE,
+  ));
+  $bundle->save();
+
+  $field_storage = FieldStorageConfig::create([
+    'field_name' => 'component_views_reference',
+    'entity_type' => 'component',
+    'type' => 'entity_reference',
+    'cardinality' => 1,
+    'custom_storage' => FALSE,
+  ]);
+
+  $field_storage->save();
+
+  // create field instance for bundle
+  $field_instance = FieldConfig::create([
+    'field_storage' => $field_storage,
+    'bundle' => 'views_reference',
+    'label' => 'Views Reference',
+  ]);
+
+  $field_instance->save();
 }
