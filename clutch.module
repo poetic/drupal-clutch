@@ -30,28 +30,44 @@ function clutch_help($route_name, RouteMatchInterface $route_match) {
  */
 function clutch_install() {
   $bundle = entity_create('component_type', array(
-    'id' => 'views_reference',
-    'label' => 'Views Reference',
-    revision' => FALSE,
+    'id' => 'component_view_reference',
+    'label' => 'Component View Reference',
+    'revision' => FALSE,
   ));
   $bundle->save();
 
   $field_storage = FieldStorageConfig::create([
-    'field_name' => 'component_views_reference',
+    'field_name' => 'component_view',
     'entity_type' => 'component',
     'type' => 'entity_reference',
     'cardinality' => 1,
     'custom_storage' => FALSE,
+    'settings' => array(
+      'target_type' => 'view',
+    ),
   ]);
-
   $field_storage->save();
 
-  // create field instance for bundle
   $field_instance = FieldConfig::create([
     'field_storage' => $field_storage,
-    'bundle' => 'views_reference',
-    'label' => 'Views Reference',
+    'bundle' => 'component_view_reference',
+    'label' => 'Component View',
   ]);
 
   $field_instance->save();
+
+  // Assign widget settings for the 'default' form mode.
+  //entity_get_form_display('component', 'component_view_reference', 'default')
+    //->setComponent('component_view', array(
+      //'type' => 'options_select',
+    //))
+    //->save();
+
+  // Assign display settings for 'default' view mode.
+  //entity_get_display('component', 'component_view_reference', 'default')
+    //->setComponent('component_view', array(
+      //'label' => 'hidden',
+      //'type' => 'entity_reference_entity_id',
+    //))
+    //->save();
 }
