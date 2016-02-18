@@ -35,39 +35,6 @@ function clutch_install() {
     'revision' => FALSE,
   ));
   $bundle->save();
-
-  $field_storage = FieldStorageConfig::create([
-    'field_name' => 'component_view',
-    'entity_type' => 'component',
-    'type' => 'entity_reference',
-    'cardinality' => 1,
-    'custom_storage' => FALSE,
-    'settings' => array(
-      'target_type' => 'view',
-    ),
-  ]);
-  $field_storage->save();
-
-  $field_instance = FieldConfig::create([
-    'field_storage' => $field_storage,
-    'bundle' => 'component_view_reference',
-    'label' => 'Component View',
-  ]);
-
-  $field_instance->save();
-
-  // Assign widget settings for the 'default' form mode.
-  //entity_get_form_display('component', 'component_view_reference', 'default')
-    //->setComponent('component_view', array(
-      //'type' => 'options_select',
-    //))
-    //->save();
-
-  // Assign display settings for 'default' view mode.
-  //entity_get_display('component', 'component_view_reference', 'default')
-    //->setComponent('component_view', array(
-      //'label' => 'hidden',
-      //'type' => 'entity_reference_entity_id',
-    //))
-    //->save();
+  //TODO: need to automate creating field and attach to
+  //component_view_reference
 }
