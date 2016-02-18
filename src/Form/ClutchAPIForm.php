@@ -33,11 +33,13 @@ class ClutchAPIForm extends FormBase {
     $existing_bundles = $this->getExistingBundles();
     $clutch_builder = new ClutchBuilder();
     $theme_array = $clutch_builder->getCustomTheme();
+    if(!isset($theme_array)) {
+      return drupal_set_message('You haven\'t set a theme yet! Please set a default theme and try again! Remember to use the custom theme from the generator.');
+    }
     $theme_path = array_values($theme_array)[0];
     $components_dir = $theme_path . '/components/';
     if(!is_dir($components_dir)) {
-      drupal_set_message('Your theme is missing the components directory. Please update and try again!');
-      return;
+      return drupal_set_message('Your theme is missing the components directory. Please update and try again!');
     }
     $components_dir = scandir($theme_path . '/components/');
     $bundles_from_theme_directory = array();
@@ -217,7 +219,7 @@ class ClutchAPIForm extends FormBase {
   }
 
   public function getExistingBundles() {
-    $bundles = \Drupal::entityQuery('component_type')->execute();
+    $bundles = \Drupal::entityQuery('component_type')->condition('id', ['component_view_reference'], 'NOT IN')->execute();
     foreach($bundles as $bundle => $label) {
       $bundles[$bundle] = ucwords(str_replace('_', ' ', $label));
     }

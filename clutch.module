@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_help().
@@ -21,4 +23,18 @@ function clutch_help($route_name, RouteMatchInterface $route_match) {
 
     default:
   }
+}
+
+/**
+ * Implements hook_install().
+ */
+function clutch_install() {
+  $bundle = entity_create('component_type', array(
+    'id' => 'component_view_reference',
+    'label' => 'Component View Reference',
+    'revision' => FALSE,
+  ));
+  $bundle->save();
+  //TODO: need to automate creating field and attach to
+  //component_view_reference
 }
