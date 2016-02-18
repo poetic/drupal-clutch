@@ -212,7 +212,7 @@ class ClutchAPIForm extends FormBase {
   }
 
   public function getExistingBundles() {
-    $bundles = \Drupal::entityQuery('component_type')->execute();
+    $bundles = \Drupal::entityQuery('component_type')->condition('id', ['component_view_reference'], 'NOT IN')->execute();
     foreach($bundles as $bundle => $label) {
       $bundles[$bundle] = ucwords(str_replace('_', ' ', $label));
     }
