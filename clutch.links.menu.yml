@@ -4,3 +4,10 @@ clutch.clutch_api_form:
   description: 'clutch functionality'
   parent: system.admin_config_system
   weight: 99
+
+clutch.clutch_api_node_form:
+  title: 'Clutch API Node'
+  route_name: clutch.clutch_api_node_form
+  description: 'clutch functionality'
+  parent: system.admin_config_system
+  weight: 100
