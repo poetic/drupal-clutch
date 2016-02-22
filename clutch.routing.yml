@@ -7,3 +7,13 @@ clutch.clutch_api_form:
     _permission: 'access administration pages'
   options:
     _admin_route: TRUE
+
+clutch.clutch_api_node_form:
+  path: '/admin/config/clutch/clutch-api-node'
+  defaults:
+    _form: '\Drupal\clutch\Form\ClutchAPINodeForm'
+    _title: 'Clutch API Node'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
