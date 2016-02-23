@@ -28,7 +28,7 @@ function component_token_info() {
   $component['type'] = array(
     'name' => t("Component type"),
   );
-  dpm($component);
+
   return array(
     'types' => array('component' => $type),
     'tokens' => array('component' => $component),

@@ -106,7 +106,7 @@ class ClutchBuilder {
         $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }else {
         // make sure delete/add other attributes
-        $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+        $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
     return $crawler;
@@ -461,7 +461,7 @@ class ClutchBuilder {
           $default_value = $node->extract(array('src'))[0];
           break;
         default:
-          $default_value = $node->extract(array('_text'))[0];
+          $default_value = $node->getInnerHtml();
           break;
       }
       return array(
