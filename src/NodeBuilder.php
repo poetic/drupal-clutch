@@ -24,14 +24,14 @@ use Drupal\clutch\clutchBuilder;
  * @package Drupal\clutch\Controller
  */
 class NodeBuilder extends ClutchBuilder{
-  public function getHTMLTemplate($template) {
+  public function getHTMLTemplate($template, $view_mode = 'full') {
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     $twig_service = \Drupal::service('twig');
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
-    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'.html.twig')->render(array());
+    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
   }
 
   public function getFieldInfo($component, $field_definition) {
