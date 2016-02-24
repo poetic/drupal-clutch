@@ -7,7 +7,6 @@
 
 namespace Drupal\clutch;
 
-use Drupal\node\Entity\Node;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
@@ -27,11 +26,10 @@ class NodeBuilder extends ClutchBuilder{
   public function getHTMLTemplate($template, $view_mode = 'full') {
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
-    $twig_service = \Drupal::service('twig');
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
-    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
+    return $this->twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
   }
 
   public function getFieldInfo($component, $field_definition) {

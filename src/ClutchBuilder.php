@@ -23,6 +23,13 @@ use Wa72\HtmlPageDom\HtmlPageCrawler;
  * @package Drupal\clutch\Controller
  */
 abstract class ClutchBuilder {
+
+  protected $twig_service;
+  
+  public function __construct() {
+    $this->twig_service = \Drupal::service('twig');
+  }
+
   /**
    * Load template using twig engine.
    * @param string $template
@@ -35,48 +42,19 @@ abstract class ClutchBuilder {
   /**
    * Find and replace static value with dynamic value from created content
    *
-   * @param $template, $component
+   * @param $template, $entity
    *   html string template from component
    *   component enityt
    *
    * @return
    *   render html for entity
    */
-  public function findAndReplace($template, $component) {
+  public function findAndReplace($template, $entity) {
     // TODO: find and replace info.
     $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
-    $html = $this->addQuickeditAttributeForBundle($crawler, $component);
-    $html = $this->findAndReplaceValueForFields($crawler, $component);
+    $html = $this->findAndReplaceValueForFields($crawler, $entity);
     return $html;
-  }
-
-  /**
-   * Add quickedit attribute for bundle
-   *
-   * @param $crawler
-   *   crawler instance of class Crawler - Symfony
-   *
-   * @return
-   *   crawler instance with update html
-   */
-  public function addQuickeditAttributeForBundle($crawler, $component) {
-    $bundle = $component->bundle();
-    $quickedit = 'component/'. $component->id();
-    $bundle_layer = $crawler->filter('[data-bundle="'. $bundle .'"]');
-    $bundle_layer->setAttribute('data-quickedit-entity-id', $quickedit)->addClass('contextual-region');
-
-    $build_contextual_links['#contextual_links']['component'] = array(
-      'route_parameters' =>array('component' => $component->id()),
-      'metadata' => array('changed' => $component->getChangedTime()),
-    );
-    $contextual_links['contextual_links'] = array(
-      '#type' => 'contextual_links_placeholder',
-      '#id' => _contextual_links_to_id($build_contextual_links['#contextual_links']),
-    );
-    $render_contextual_links = render($contextual_links)->__toString();
-    $bundle_layer->prepend($render_contextual_links);
-    return $crawler;
   }
 
   /**
@@ -88,8 +66,8 @@ abstract class ClutchBuilder {
    * @return
    *   crawler instance with update html
    */
-  public function findAndReplaceValueForFields($crawler, $component) {
-    $fields = $this->prepareFields($component);
+  public function findAndReplaceValueForFields($crawler, $entity) {
+    $fields = $this->collectFields($entity);
     foreach($fields as $field_name => $field) {
       $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
       if($field_type == 'link') {
@@ -104,16 +82,25 @@ abstract class ClutchBuilder {
     return $crawler;
   }
 
-  public function prepareFields($component) {
+  /**
+   * Collect Fields
+   *
+   * @param $entity
+   *   entity object
+   *
+   * @return
+   *   array of fields belong to this object
+   */
+  public function collectFields($entity) {
     $fields = array();
-    $fields_definition = $component->getFieldDefinitions();
+    $fields_definition = $entity->getFieldDefinitions();
     foreach($fields_definition as $field_definition) {
      if(!empty($field_definition->getTargetBundle())) {
        if($field_definition->getType() == 'entity_reference_revisions') {
         // TODO: handle paragraph fields
 
        }else {
-         $non_paragraph_field = $this->getFieldInfo($component, $field_definition);
+         $non_paragraph_field = $this->collectFieldValues($entity, $field_definition);
          $key = key($non_paragraph_field);
          $fields[$key] = $non_paragraph_field[$key];
        }
@@ -122,32 +109,18 @@ abstract class ClutchBuilder {
     return $fields;
   }
 
-  abstract public function getFieldInfo($component, $field_definition);
-
   /**
-   * Clean up page after deleting component. 
-   * Page still references non existing component therefore breaks rendering function
+   * Collect Field Values
    *
-   * @param $component_id
-   *   id of component
+   * @param $entity, $field_definition
+   *   entity object
+   *   field definition object
    *
    * @return
-   *   TODO
+   *   array of value for this field
    */
-  public function removeComponentOnPage($component_id) {
-    $page_ids = \Drupal::entityQuery('custom_page')
-        ->condition('associated_components.entity.id', $component_id)->execute();
-    $pages = entity_load_multiple('custom_page', $page_ids);
-    foreach($pages as $page) {
-      $components = $page->get('associated_components')->getValue();
-      $component_target_ids_array = array_column($components, 'target_id');
-      if( in_array($component_id, $component_target_ids_array) ) {
-       unset($component_target_ids_array[array_search($component_id, $component_target_ids_array)]);
-      }
-      $page->set('associated_components', $component_target_ids_array);
-      $page->save();
-    }
-  }
+  abstract public function collectFieldValues($entity, $field_definition);
+
 
   /**
    * Create entities from template
@@ -223,7 +196,7 @@ abstract class ClutchBuilder {
     $entity_info = array();
     $bundle = $this->getBundle($crawler);
     $entity_info['id'] = $bundle;
-    $fields = $this->getFields($crawler, $bundle);
+    $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
     $entity_info['fields'] = $fields;
     return $entity_info;
   }
@@ -249,7 +222,7 @@ abstract class ClutchBuilder {
    * @return
    *   An array of fields info.
    */
-  public function getFields(Crawler $crawler, $bundle) {
+  public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
     $fields = $crawler->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
       $field_type = $node->extract(array('data-type'))[0];
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
@@ -298,57 +271,6 @@ abstract class ClutchBuilder {
     return $need_to_update_bundles;
   }
 
-  /**
-   * verify bundle that need to be updated
-   *
-   * @param $bundle
-   *   bundle machine name
-   *
-   * @return
-   *   TRUE or FALSE
-   */
-  public function verifyIfBundleNeedToUpdate($bundle) {
-    $template = str_replace('_', '-', $bundle);
-    $existing_bundle_fields_definition = \Drupal::entityManager()->getFieldDefinitions('component', $bundle);
-    $existing_bundle_info = array();
-    $existing_bundle_info['id'] = $bundle;
-    foreach($existing_bundle_fields_definition as $field_definition) {
-      if(!empty($field_definition->getTargetBundle())) {
-        $existing_bundle_info['fields'][] = $this->getFieldInfoFromExistingBundle($field_definition);
-      }
-    }
-    $bundle_info_from_template = $this->prepareEntityInfoFromTemplate($template);
-    return $this->compareInfo($existing_bundle_info, $bundle_info_from_template);
-  }
-
-  public function compareInfo($existing_bundle, $bundle_from_template) {
-    $count_fields_from_existing_bundle = count($existing_bundle['fields']);
-    $count_fields_from_bundle_from_template = count($bundle_from_template['fields']);
-    sort($existing_bundle['fields']);
-    sort($bundle_from_template['fields']);
-
-    // check if match number of fields
-    if($count_fields_from_existing_bundle != $count_fields_from_bundle_from_template) {
-      return TRUE;
-    } else {
-      // check if match field type
-      for($i = 0; $i < $count_fields_from_existing_bundle; $i++) {
-        if($existing_bundle['fields'][$i]['field_name'] != $bundle_from_template['fields'][$i]['field_name']) {
-          return TRUE;
-        }elseif($existing_bundle['fields'][$i]['field_type'] != $bundle_from_template['fields'][$i]['field_type']) {
-          return TRUE;
-        }
-      }
-      return FALSE;
-    }
-  }
-
-  public function getFieldInfoFromExistingBundle($field) {
-    return array(
-      'field_name' => $field->get('field_name'),
-      'field_type' => $field->get('field_type'),
-    );
-  }
   /**
    * Get front end theme directory
    * @return 
