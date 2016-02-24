@@ -31,14 +31,14 @@ class ClutchNodeBuilder {
    * @return string
    *   Return html string from template
    */
-  protected function getHTMLTemplate($template) {
+  protected function getHTMLTemplate($template, $view_mode = 'full') {
     $theme_array = $this->getFrontTheme();
     $theme_path = array_values($theme_array)[0];
     $twig_service = \Drupal::service('twig');
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
-    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'.html.twig')->render(array());
+    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
   }
 
   /**
@@ -51,9 +51,9 @@ class ClutchNodeBuilder {
    * @return
    *   render html for entity
    */
-  public function findAndReplace($template, $component) {
+  public function findAndReplace($template, $component, $view_mode) {
     // TODO: find and replace info.
-    $html = $this->getHTMLTemplate($template);
+    $html = $this->getHTMLTemplate($template, $view_mode);
     $crawler = new HtmlPageCrawler($html);
     $html = $this->addQuickeditAttributeForBundle($crawler, $component);
     $html = $this->findAndReplaceValueForFields($crawler, $component);
@@ -364,7 +364,6 @@ class ClutchNodeBuilder {
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    //dpm($field);
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field['field_name'],
       'entity_type' => 'node',
@@ -423,10 +422,8 @@ class ClutchNodeBuilder {
     $entity_info['id'] = $bundle;
     $fields = $this->getFields($crawler, $bundle);
     $entity_info['fields'] = $fields;
-    //dpm($entity_info);
     $bundle_description = $this->getDescription($crawler);
     return $entity_info;
-    //dpm($bundle_description);
   }
 
   /**
