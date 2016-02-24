@@ -22,7 +22,7 @@ use Wa72\HtmlPageDom\HtmlPageCrawler;
  *
  * @package Drupal\clutch\Controller
  */
-class ClutchBuilder {
+abstract class ClutchBuilder {
   /**
    * Load template using twig engine.
    * @param string $template
@@ -30,33 +30,24 @@ class ClutchBuilder {
    * @return string
    *   Return html string from template
    */
-  public function getHTMLTemplate($template, $entity_type) {
-    $theme_array = $this->getCustomTheme();
-    $theme_path = array_values($theme_array)[0];
-    $twig_service = \Drupal::service('twig');
-    // $template name has the same name of directory that holds the template
-    // pass null array to pass validation. we don't need to replace any variables. this only return
-    // the html string to we can parse and handle it
-    return $twig_service->loadTemplate($theme_path.'/'. $entity_type .'s/'.$template.'/'.$template.'.html.twig')->render(array());
-  }
+  abstract public function getHTMLTemplate($template);
 
   /**
    * Find and replace static value with dynamic value from created content
    *
-   * @param $template, $entity
+   * @param $template, $component
    *   html string template from component
    *   component enityt
    *
    * @return
    *   render html for entity
    */
-  public function findAndReplace($template, $entity) {
+  public function findAndReplace($template, $component) {
     // TODO: find and replace info.
-    $entity_type = $entity->getEntityTypeId();
-    $html = $this->getHTMLTemplate($template, $entity_type);
+    $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
-    $html = $this->addQuickeditAttributeForBundle($crawler, $entity);
-    $html = $this->findAndReplaceValueForFields($crawler, $entity);
+    $html = $this->addQuickeditAttributeForBundle($crawler, $component);
+    $html = $this->findAndReplaceValueForFields($crawler, $component);
     return $html;
   }
 
@@ -69,16 +60,15 @@ class ClutchBuilder {
    * @return
    *   crawler instance with update html
    */
-  protected function addQuickeditAttributeForBundle($crawler, $entity) {
-    $bundle = $entity->bundle();
-    $entity_type = $entity->getEntityType();
-    $quickedit = $entity_type .'/'. $entity->id();
+  public function addQuickeditAttributeForBundle($crawler, $component) {
+    $bundle = $component->bundle();
+    $quickedit = 'component/'. $component->id();
     $bundle_layer = $crawler->filter('[data-bundle="'. $bundle .'"]');
     $bundle_layer->setAttribute('data-quickedit-entity-id', $quickedit)->addClass('contextual-region');
 
-    $build_contextual_links['#contextual_links'][$entity_type] = array(
-      'route_parameters' =>array($entity_type => $entity->id()),
-      'metadata' => array('changed' => $entity->getChangedTime()),
+    $build_contextual_links['#contextual_links']['component'] = array(
+      'route_parameters' =>array('component' => $component->id()),
+      'metadata' => array('changed' => $component->getChangedTime()),
     );
     $contextual_links['contextual_links'] = array(
       '#type' => 'contextual_links_placeholder',
@@ -98,8 +88,8 @@ class ClutchBuilder {
    * @return
    *   crawler instance with update html
    */
-  public function findAndReplaceValueForFields($crawler, $entity) {
-    $fields = $this->collectFieldsValue($entity);
+  public function findAndReplaceValueForFields($crawler, $component) {
+    $fields = $this->prepareFields($component);
     foreach($fields as $field_name => $field) {
       $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
       if($field_type == 'link') {
@@ -108,31 +98,22 @@ class ClutchBuilder {
         $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }else {
         // make sure delete/add other attributes
-        $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+        $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
     return $crawler;
   }
 
-  /**
-   * Collect fields value from entity
-   *
-   * @param $entity
-   *   entity
-   *
-   * @return
-   *   array of fields info from entity
-   */
-  public function collectFieldsValue($entity) {
+  public function prepareFields($component) {
     $fields = array();
-    $fields_definition = $entity->getFieldDefinitions();
+    $fields_definition = $component->getFieldDefinitions();
     foreach($fields_definition as $field_definition) {
      if(!empty($field_definition->getTargetBundle())) {
        if($field_definition->getType() == 'entity_reference_revisions') {
         // TODO: handle paragraph fields
 
        }else {
-         $non_paragraph_field = $this->getFieldInfo($entity, $field_definition);
+         $non_paragraph_field = $this->getFieldInfo($component, $field_definition);
          $key = key($non_paragraph_field);
          $fields[$key] = $non_paragraph_field[$key];
        }
@@ -141,33 +122,7 @@ class ClutchBuilder {
     return $fields;
   }
 
-  /**
-   * Collect field value from entity
-   *
-   * @param $entity, $field_definition
-   *
-   * @return
-   *   array of field info from entity
-   */
-  public function getFieldInfo($entity, $field_definition) {
-    $bundle = $entity->bundle();
-    $entity_type = $entity->getEntityTypeId();
-    $field_name = $field_definition->getName();
-    $field_language = $field_definition->language()->getId();
-    $field_value = $entity->get($field_name)->getValue();
-    $field_type = $field_definition->getType();
-    if($field_type == 'image') {
-      $file = File::load($field_value[0]['target_id']);
-      $url = file_create_url($file->get('uri')->value);
-      $field_value[0]['url'] = $url;
-    }
-
-    $field_attribute = $entity_type .'/' . $entity->id() . '/' . $field_name . '/' . $field_language . '/full';
-    return [str_replace($bundle.'_', '', $field_name) => array(
-      'content' => $field_value[0],
-      'quickedit' => $field_attribute,
-    )];
-  }
+  abstract public function getFieldInfo($component, $field_definition);
 
   /**
    * Delete entities and bundles
@@ -196,13 +151,13 @@ class ClutchBuilder {
           ->save();
       } else {
         \Drupal::logger('clutch:workflow')->notice('Cannot delete bundle. Bundle does not exist to delete.');
-        drupal_set_message('Cannot delete bundle. Bundle does not exist to delete.');
+        // dpm('Cannot delete bundle. Bundle does not exist to delete.');
       }
     }
   }
 
   /**
-   * Clean up page after deleting component.
+   * Clean up page after deleting component. 
    * Page still references non existing component therefore breaks rendering function
    *
    * @param $component_id
@@ -228,7 +183,7 @@ class ClutchBuilder {
 
   /**
    * Update entities and bundles
-   * Since we treate those as singleton, we just need to delete and create a new one
+   * Since we treate those as singlton, we just need to delete and create a new one
    *
    * @param $bundles
    *   array of bundles
@@ -236,9 +191,9 @@ class ClutchBuilder {
    * @return
    *   TODO
    */
-  public function updateEntities($bundles, $entity_type) {
+  public function updateEntities($bundles) {
     $this->deleteEntities($bundles);
-    $this->createEntitiesFromTemplate($bundles, $entity_type);
+    $this->createEntitiesFromTemplate($bundles);
     entity_get_form_display('custom_page', 'custom_page', 'default')
       ->setComponent('associated_components', array(
         'type' => 'entity_reference_autocomplete',
@@ -249,16 +204,15 @@ class ClutchBuilder {
   /**
    * Create entities from template
    *
-   * @param $bundles, $entity_type
+   * @param $bundles
    *   array of bundles
-   *   entity type
    *
    * @return
    *   TODO
    */
-  public function createEntitiesFromTemplate($bundles, $entity_type) {
+  public function createEntitiesFromTemplate($bundles) {
     foreach($bundles as $bundle) {
-      $this->createEntityFromTemplate(str_replace('_', '-', $bundle), $entity_type);
+      $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
       entity_get_form_display('custom_page', 'custom_page', 'default')
         ->setComponent('associated_components', array(
           'type' => 'entity_reference_autocomplete',
@@ -270,15 +224,14 @@ class ClutchBuilder {
   /**
    * Create entity from template
    *
-   * @param $template, $entity_type
+   * @param $template
    *   html string template from theme
-   *   entity type
-   * 
+   *
    * @return
    *   return entity object
    */
-  public function createEntityFromTemplate($template, $entity_type) {
-    $bundle_info = $this->prepareEntityInfoFromTemplate($template, $entity_type);
+  public function createEntityFromTemplate($template) {
+    $bundle_info = $this->prepareEntityInfoFromTemplate($template);
     $this->createBundle($bundle_info);
   }
 
@@ -291,28 +244,7 @@ class ClutchBuilder {
    * @return
    *   return bundle object
    */
-  public function createBundle($bundle_info) {
-    if(entity_load('component_type', $bundle_info['id'])) {
-      // TODO Handle update bundle
-      \Drupal::logger('clutch:workflow')->notice('Bundle exists. Need to update bundle.');
-      drupal_set_message('Cannot create bundle. Bundle exists. Need to update bundle.');
-    }else {
-      $bundle_label = ucwords(str_replace('_', ' ', $bundle_info['id']));
-      $bundle = entity_create('component_type', array(
-        'id' => $bundle_info['id'],
-        'label' => $bundle_label,
-        'revision' => FALSE,
-      ));
-      $bundle->save();
-      \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
-        array(
-          '@bundle' => $bundle_label,
-        ));
-      $this->updateAssociatedComponents($bundle_info['id']);
-      $this->createFields($bundle_info);
-      $this->createComponentContent($bundle_info);
-    }
-  }
+  abstract public function createBundle($bundle_info);
 
   /**
    * Associate field associated_components with new bundle
@@ -343,7 +275,9 @@ class ClutchBuilder {
     $component->save();
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
+        
         $settings['file_directory'] = 'components/[date:custom:Y]-[date:custom:m]';
+
         $image = File::create();
         $image->setFileUri($field['value']);
         $image->setOwnerId(\Drupal::currentUser()->id());
@@ -376,65 +310,22 @@ class ClutchBuilder {
     }
   }
 
-  public function createField($bundle, $field) {
-    // since we are going to treat each field unique to each bundle, we need to
-    // create field storage(field base)
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => $field['field_name'],
-      'entity_type' => 'component',
-      'type' => $field['field_type'],
-      // 'cardinality' => $field_info['cardinality'],
-      'cardinality' => 1,
-      'custom_storage' => FALSE,
-    ]);
-
-    $field_storage->save();
-
-    // create field instance for bundle
-    $field_instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => $bundle,
-      'label' => str_replace('_', ' ', $field['field_name']),
-    ]);
-
-    $field_instance->save();
-
-    // Assign widget settings for the 'default' form mode.
-    entity_get_form_display('component', $bundle, 'default')
-      ->setComponent($field['field_name'], array(
-        'type' => $field['field_form_display'],
-      ))
-      ->save();
-
-    // Assign display settings for 'default' view mode.
-    entity_get_display('component', $bundle, 'default')
-      ->setComponent($field['field_name'], array(
-        'label' => 'hidden',
-        'type' => $field['field_formatter'],
-      ))
-      ->save();
-     \Drupal::logger('clutch:workflow')->notice('Create field @field for bundle @bundle',
-      array(
-        '@field' => str_replace('_', ' ', $field['field_name']),
-        '@bundle' => $bundle,
-      ));
-  }
+  abstract public function createField($bundle, $field);
 
   /**
    * Prepare entity to create bundle and content
    *
-   * @param $template, $entity_type
+   * @param $template
    *   html string template from theme
-   *   entity type
    *
    * @return
    *   An array of entity info.
    */
-  public function prepareEntityInfoFromTemplate($template, $entity_type) {
-    $html = $this->getHTMLTemplate($template, $entity_type);
+  public function prepareEntityInfoFromTemplate($template) {
+    $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
     $entity_info = array();
-    $bundle = $this->getBundle($crawler, $entity_type);
+    $bundle = $this->getBundle($crawler);
     $entity_info['id'] = $bundle;
     $fields = $this->getFields($crawler, $bundle);
     $entity_info['fields'] = $fields;
@@ -444,17 +335,13 @@ class ClutchBuilder {
   /**
    * Look up bundle information from template
    *
-   * @param $crawler, $entity_type
+   * @param $crawler
    *   crawler instance of class Crawler - Symfony
-   *   entity type
    *
    * @return
    *   An array of bundle info.
    */
-  public function getBundle(Crawler $crawler, $entity_type) {
-    $bundle = $crawler->filter('*')->getAttribute('data-'. $entity_type);
-    return $bundle;
-  }
+  abstract public function getBundle(Crawler $crawler);
 
   /**
    * Look up fields information from template
@@ -482,7 +369,7 @@ class ClutchBuilder {
           $default_value = $node->extract(array('src'))[0];
           break;
         default:
-          $default_value = $node->extract(array('_text'))[0];
+          $default_value = $node->getInnerHtml();
           break;
       }
       return array(
@@ -534,22 +421,10 @@ class ClutchBuilder {
         $existing_bundle_info['fields'][] = $this->getFieldInfoFromExistingBundle($field_definition);
       }
     }
-    $bundle_info_from_template = $this->prepareEntityInfoFromTemplate($template, 'component');
+    $bundle_info_from_template = $this->prepareEntityInfoFromTemplate($template);
     return $this->compareInfo($existing_bundle_info, $bundle_info_from_template);
   }
 
-  /**
-   * Compare info between existing bundle and bundle from template
-   * to figure out if bundle needs to be updated
-   *
-   * @param $existing bundle, $bundle_from_template
-   *   array of info from existing bundle
-   *   array of info from bundle from template
-   *   
-   *
-   * @return
-   *   TRUE or FALSE
-   */
   public function compareInfo($existing_bundle, $bundle_from_template) {
     $count_fields_from_existing_bundle = count($existing_bundle['fields']);
     $count_fields_from_bundle_from_template = count($bundle_from_template['fields']);
@@ -572,16 +447,6 @@ class ClutchBuilder {
     }
   }
 
-  /**
-   * Collect field info from field_collection
-   *
-   * @param $field
-   *   array of field collection
-   *   
-   *
-   * @return
-   *   array of needed field info
-   */
   public function getFieldInfoFromExistingBundle($field) {
     return array(
       'field_name' => $field->get('field_name'),
@@ -590,15 +455,15 @@ class ClutchBuilder {
   }
   /**
    * Get front end theme directory
-   * @return
+   * @return 
    *  an array of theme namd and theme path
    */
-  public function getCustomTheme() {
+  public function getFrontTheme() {
     $themes = system_list('theme');
     foreach($themes as $theme) {
       if($theme->origin !== 'core') {
         return [$theme->getName() => $theme->getPath()];
-      }
+      } 
     }
   }
 }

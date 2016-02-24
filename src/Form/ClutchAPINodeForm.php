@@ -9,7 +9,7 @@ namespace Drupal\clutch\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\clutch\ClutchBuilder;
+use Drupal\clutch\NodeBuilder;
 
 /**
  * Class clutchForm.
@@ -31,8 +31,8 @@ class ClutchAPINodeForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $listing_bundles = '';
     $existing_bundles = $this->getExistingBundles();
-    $clutch_node_builder = new ClutchBuilder();
-    $theme_array = $clutch_node_builder->getCustomTheme();
+    $clutch_node_builder = new NodeBuilder();
+    $theme_array = $clutch_node_builder->getFrontTheme();
     $theme_path = array_values($theme_array)[0];
     $components_dir = scandir($theme_path . '/nodes/');
     $bundles_from_theme_directory = array();
@@ -42,27 +42,10 @@ class ClutchAPINodeForm extends FormBase {
       }
     }
 
-    // retrieve bundles need to delete
-    $to_delete_bundles = array_diff_key($existing_bundles, $bundles_from_theme_directory);
-    if(count($to_delete_bundles) > 0){
-      $to_delete_bundles['select_all'] = 'Select All';
-    }
-
     // retrieve bundles need to create
     $to_create_bundles = array_diff_key($bundles_from_theme_directory, $existing_bundles);
     if(count($to_create_bundles) > 0){
       $to_create_bundles['select_all'] = 'Select All';
-    }
-
-    $match_bundles = array_intersect_key($existing_bundles, $bundles_from_theme_directory);
-
-    $to_update_bundles = $clutch_node_builder->getNeedUpdateComponents($match_bundles);
-    if(count($to_update_bundles) > 0){
-      $to_update_bundles['select_all'] = 'Select All';
-    }
-
-    foreach($to_update_bundles as $bundle => $label) {
-      $to_update_bundles[$bundle] = $label . ' (This bundle has changes! Need to delete and create a new one)';
     }
 
     foreach($existing_bundles as $bundle) {
@@ -76,7 +59,7 @@ class ClutchAPINodeForm extends FormBase {
         '#type' => 'details',
         '#prefix' => '<div class="action new-bundles">',
         '#suffix' => '</div>',
-        '#title' => 'New Bundles in template',
+        '#title' => 'New Nodes in template',
         '#open' => TRUE,
       );
       $form['new_bundles_wrapper']['new-bundles'] = array(
@@ -94,66 +77,17 @@ class ClutchAPINodeForm extends FormBase {
       $create = TRUE;
     }
 
-    if ($to_delete_bundles){
-      $form['delete_bundles_wrapper'] = array(
-        '#type' => 'details',
-        '#prefix' => '<div class="action delete-bundles">',
-        '#suffix' => '</div>',
-        '#title' => 'Deleted Bundles in template',
-        '#open' => TRUE,
-      );
 
-      $form['delete_bundles_wrapper']['delete-bundles'] = array(
-        '#type' => 'checkboxes',
-        '#options' => $to_delete_bundles,
-      );
-
-      $form['delete_bundles_wrapper']['delete'] = array(
-        '#type' => 'submit',
-        '#value' => t('Delete'),
-        '#submit' => [[$this, 'deleteComponents']],
-        '#attributes' => array(
-          'class' => array('button--primary'),
-        ),
-      );
-      $delete = TRUE;
-    }
-    if ($to_update_bundles){
-      $form['update_bundles_wrapper'] = array(
-        '#type' => 'details',
-        '#prefix' => '<div class="action update-bundles">',
-        '#suffix' => '</div>',
-        '#title' => 'Update Bundles in template',
-        '#open' => TRUE,
-      );
-
-      $form['update_bundles_wrapper']['update-bundles'] = array(
-        '#type' => 'checkboxes',
-        // '#title' => t('Update Bundles in template'),
-        '#options' => $to_update_bundles,
-      );
-
-      $form['update_bundles_wrapper']['update'] = array(
-        '#type' => 'submit',
-        '#value' => t('Update'),
-        '#submit' => [[$this, 'updateComponents']],
-        '#attributes' => array(
-          'class' => array('button--primary'),
-        ),
-      );
-      $update = TRUE;
-    }
-
-    if (!$create && !$update && !$delete) {
+    if (!$create) {
       $form['upToDate'] = array(
-        '#markup' => '<h1>All Bundles are Up To Date!</h1>'
+        '#markup' => '<h1>All Nodes are Up To Date!</h1>'
       );
     }
 
     if(!empty($listing_bundles)) {
       $form['listing'] = array(
         '#type' => 'details',
-        '#title' => 'Existing Bundles',
+        '#title' => 'Existing Nodes',
         '#markup' => '<ul>' . $listing_bundles . '</ul>',
       );
     }
@@ -184,31 +118,9 @@ class ClutchAPINodeForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $clutch_node_builder = new ClutchBuilder();
-    $clutch_node_builder->createEntitiesFromTemplate($bundles, 'node');
+    $clutch_node_builder = new NodeBuilder();
+    $clutch_node_builder->createEntitiesFromTemplate($bundles);
     // dpm('Create Entity');
-  }
-
-  public function deleteComponents(array &$form, FormStateInterface $form_state) {
-    $submission_values = $form_state->getValues();
-    $bundles = array_filter(array_values($submission_values['delete-bundles']));
-    if(in_array('select_all', $bundles)){
-      array_pop($bundles);
-    }
-    $clutch_node_builder = new ClutchBuilder();
-    $clutch_node_builder->deleteEntities($bundles);
-    // dpm('Delete Entity');
-  }
-
-  public function updateComponents(array &$form, FormStateInterface $form_state) {
-    $submission_values = $form_state->getValues();
-    $bundles = array_filter(array_values($submission_values['update-bundles']));
-    $clutch_node_builder = new ClutchBuilder();
-    if(in_array('select_all', $bundles)){
-      array_pop($bundles);
-    }
-    $clutch_node_builder->updateEntities($bundles);
-    // dpm('Update Entity');
   }
 
   public function getExistingBundles() {
