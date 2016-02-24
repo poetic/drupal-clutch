@@ -25,7 +25,7 @@ use Drupal\clutch\clutchBuilder;
  */
 class NodeBuilder extends ClutchBuilder{
   public function getHTMLTemplate($template) {
-    $theme_array = $this->getFrontTheme();
+    $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     $twig_service = \Drupal::service('twig');
     // $template name has the same name of directory that holds the template

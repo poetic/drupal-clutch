@@ -32,7 +32,7 @@ class ClutchAPINodeForm extends FormBase {
     $listing_bundles = '';
     $existing_bundles = $this->getExistingBundles();
     $clutch_node_builder = new NodeBuilder();
-    $theme_array = $clutch_node_builder->getFrontTheme();
+    $theme_array = $clutch_node_builder->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     $components_dir = scandir($theme_path . '/nodes/');
     $bundles_from_theme_directory = array();
@@ -120,7 +120,6 @@ class ClutchAPINodeForm extends FormBase {
     }
     $clutch_node_builder = new NodeBuilder();
     $clutch_node_builder->createEntitiesFromTemplate($bundles);
-    // dpm('Create Entity');
   }
 
   public function getExistingBundles() {

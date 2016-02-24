@@ -18,6 +18,12 @@ use Drupal\clutch\ComponentBuilder;
  */
 class ClutchAPIForm extends FormBase {
 
+  private $component_builder;
+
+  public function __construct() {
+    $this->component_builder = new ComponentBuilder();
+  }
+
    /**
    * {@inheritdoc}
    */
@@ -29,13 +35,22 @@ class ClutchAPIForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $create = $delete = $update = FALSE;
+    
     $listing_bundles = '';
-    $existing_bundles = $this->getExistingBundles();
-    $clutch_builder = new ComponentBuilder();
-    $theme_array = $clutch_builder->getFrontTheme();
+    $existing_bundles = $this->component_builder->getExistingBundles();
+    $theme_array = $this->component_builder->getCustomTheme();
+    if(!isset($theme_array)) {
+      return drupal_set_message('You haven\'t set a theme yet! Please set a default theme and try again! Remember to use the custom theme from the generator.');
+    }
     $theme_path = array_values($theme_array)[0];
+    $components_dir = $theme_path . '/components/';
+    if(!is_dir($components_dir)) {
+      return drupal_set_message('Your theme is missing the components directory. Please update and try again!');
+    }
     $components_dir = scandir($theme_path . '/components/');
     $bundles_from_theme_directory = array();
+
     foreach ($components_dir as $dir) {
       if (strpos($dir, '.') !== 0) {
         $bundles_from_theme_directory[str_replace('-', '_', $dir)] = ucwords(str_replace('-', ' ', $dir));
@@ -56,7 +71,7 @@ class ClutchAPIForm extends FormBase {
 
     $match_bundles = array_intersect_key($existing_bundles, $bundles_from_theme_directory);
 
-    $to_update_bundles = $clutch_builder->getNeedUpdateComponents($match_bundles);
+    $to_update_bundles = $this->component_builder->getNeedUpdateComponents($match_bundles);
     if(count($to_update_bundles) > 0){
       $to_update_bundles['select_all'] = 'Select All';
     }
@@ -159,7 +174,6 @@ class ClutchAPIForm extends FormBase {
     }
 
     $form['#attached']['library'][] = 'clutch/clutch';
-
     return $form;
   }
 
@@ -184,9 +198,8 @@ class ClutchAPIForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $clutch_builder = new ComponentBuilder();
-    $clutch_builder->createEntitiesFromTemplate($bundles);
-    // dpm('Create Entity');
+    $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+    drupal_set_message('Create Entity');
   }
 
   public function deleteComponents(array &$form, FormStateInterface $form_state) {
@@ -195,27 +208,17 @@ class ClutchAPIForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $clutch_builder = new ComponentBuilder();
-    $clutch_builder->deleteEntities($bundles);
-    // dpm('Delete Entity');
+    $this->component_builder->deleteEntities($bundles);
+    drupal_set_message('Delete Entity');
   }
 
   public function updateComponents(array &$form, FormStateInterface $form_state) {
     $submission_values = $form_state->getValues();
     $bundles = array_filter(array_values($submission_values['update-bundles']));
-    $clutch_builder = new ComponentBuilder();
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $clutch_builder->updateEntities($bundles);
-    // dpm('Update Entity');
-  }
-
-  public function getExistingBundles() {
-    $bundles = \Drupal::entityQuery('component_type')->execute();
-    foreach($bundles as $bundle => $label) {
-      $bundles[$bundle] = ucwords(str_replace('_', ' ', $label));
-    }
-    return $bundles;
+    $this->component_builder->updateEntities($bundles);
+    drupal_set_message('Update Entity');
   }
 }

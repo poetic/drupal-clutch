@@ -125,38 +125,6 @@ abstract class ClutchBuilder {
   abstract public function getFieldInfo($component, $field_definition);
 
   /**
-   * Delete entities and bundles
-   *
-   * @param $bundles
-   *   array of bundles
-   *
-   * @return
-   *   TODO
-   */
-  public function deleteEntities($bundles) {
-    foreach($bundles as $bundle) {
-      $bundle_value = str_replace('-', '_', $bundle);
-      $entity = \Drupal::entityQuery('component')
-        ->condition('type', $bundle_value);
-      $entity_array = $entity->execute();
-      $entity_id = key($entity_array);
-      if($entity_id) {
-        $this->removeComponentOnPage($entity_id);
-        entity_load('component', $entity_id)->delete();
-        entity_load('component_type', $bundle_value)->delete();
-        entity_get_form_display('custom_page', 'custom_page', 'default')
-          ->setComponent('associated_components', array(
-            'type' => 'entity_reference_autocomplete',
-          ))
-          ->save();
-      } else {
-        \Drupal::logger('clutch:workflow')->notice('Cannot delete bundle. Bundle does not exist to delete.');
-        // dpm('Cannot delete bundle. Bundle does not exist to delete.');
-      }
-    }
-  }
-
-  /**
    * Clean up page after deleting component. 
    * Page still references non existing component therefore breaks rendering function
    *
@@ -182,26 +150,6 @@ abstract class ClutchBuilder {
   }
 
   /**
-   * Update entities and bundles
-   * Since we treate those as singlton, we just need to delete and create a new one
-   *
-   * @param $bundles
-   *   array of bundles
-   *
-   * @return
-   *   TODO
-   */
-  public function updateEntities($bundles) {
-    $this->deleteEntities($bundles);
-    $this->createEntitiesFromTemplate($bundles);
-    entity_get_form_display('custom_page', 'custom_page', 'default')
-      ->setComponent('associated_components', array(
-        'type' => 'entity_reference_autocomplete',
-      ))
-      ->save();
-  }
-
-  /**
    * Create entities from template
    *
    * @param $bundles
@@ -213,11 +161,6 @@ abstract class ClutchBuilder {
   public function createEntitiesFromTemplate($bundles) {
     foreach($bundles as $bundle) {
       $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
-      entity_get_form_display('custom_page', 'custom_page', 'default')
-        ->setComponent('associated_components', array(
-          'type' => 'entity_reference_autocomplete',
-        ))
-        ->save();
     }
   }
 
@@ -246,63 +189,6 @@ abstract class ClutchBuilder {
    */
   abstract public function createBundle($bundle_info);
 
-  /**
-   * Associate field associated_components with new bundle
-   *
-   * @param $bundle
-   *   bundle name
-   *
-   * @return
-   *   TODO
-   */
-  public function updateAssociatedComponents($bundle) {
-    $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
-    $handler_settings = $field_associated_components->getSetting('handler_settings');
-    $handler_settings['target_bundles'][$bundle] = $bundle;
-    $field_associated_components->setSetting('handler_settings', $handler_settings);
-    $field_associated_components->save();
-    \Drupal::logger('clutch:workflow')->notice('Add new target bundle @bundle for associated components field on Custom Page.',
-      array(
-        '@bundle' => $bundle,
-      ));
-  }
-
-  public function createComponentContent($content) {
-    $component = Component::create([
-      'type' => $content['id'],
-      'name' => ucwords(str_replace('_', ' ', $content['id'])),
-    ]);
-    $component->save();
-    foreach($content['fields'] as $field) {
-      if($field['field_type'] == 'image') {
-        
-        $settings['file_directory'] = 'components/[date:custom:Y]-[date:custom:m]';
-
-        $image = File::create();
-        $image->setFileUri($field['value']);
-        $image->setOwnerId(\Drupal::currentUser()->id());
-        $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
-        $image->setFileName(drupal_basename($field['value']));
-        $destination_dir = 'public://components';
-        file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
-        $destination = $destination_dir . '/' . basename($field['value']);
-        $file = file_move($image, $destination, FILE_CREATE_DIRECTORY);
-
-        $values = array(
-          'target_id' => $file->id(),
-        );
-
-        $component->set($field['field_name'], $values);
-      }else {
-        $component->set($field['field_name'], $field['value']);
-      }
-    }
-    $component->save();
-    \Drupal::logger('clutch:workflow')->notice('Create content for bundle @bundle',
-      array(
-        '@bundle' => $content['id'],
-      ));
-  }
 
   public function createFields($bundle) {
     foreach($bundle['fields'] as $field) {
@@ -310,6 +196,16 @@ abstract class ClutchBuilder {
     }
   }
 
+  /**
+   * create field and associate to bundle
+   *
+   * @param $bundle, $field
+   *   bundle machine name
+   *   array of field info
+   *
+   * @return
+   *   TODO
+   */
   abstract public function createField($bundle, $field);
 
   /**
@@ -458,7 +354,7 @@ abstract class ClutchBuilder {
    * @return 
    *  an array of theme namd and theme path
    */
-  public function getFrontTheme() {
+  public function getCustomTheme() {
     $themes = system_list('theme');
     foreach($themes as $theme) {
       if($theme->origin !== 'core') {
