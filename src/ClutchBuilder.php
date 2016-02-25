@@ -42,16 +42,17 @@ abstract class ClutchBuilder {
   /**
    * Find and replace static value with dynamic value from created content
    *
-   * @param $template, $entity
+   * @param $template, $entity, $view_mode
    *   html string template from component
-   *   component enityt
+   *   component entity
+   *   view mode of the entity
    *
    * @return
    *   render html for entity
    */
-  public function findAndReplace($template, $entity) {
+  public function findAndReplace($template, $entity, $view_mode = NULL) {
     // TODO: find and replace info.
-    $html = $this->getHTMLTemplate($template);
+    $html = $this->getHTMLTemplate($template, $view_mode);
     $crawler = new HtmlPageCrawler($html);
     $html = $this->findAndReplaceValueForFields($crawler, $entity);
     return $html;
@@ -68,9 +69,8 @@ abstract class ClutchBuilder {
    */
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
-    dpm($crawler->filter('*')->getAttribute('data-node'));
     foreach($fields as $field_name => $field) {
-      if($crawler->filter('h1')->getAttribute('data-field') == $field_name) {
+      // if($crawler->filter('h1')->getAttribute('data-field') == $field_name) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
         if($field_type == 'link') {
           $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
@@ -80,7 +80,7 @@ abstract class ClutchBuilder {
           // make sure delete/add other attributes
           $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
         }
-      }
+      // }
     }
     return $crawler;
   }

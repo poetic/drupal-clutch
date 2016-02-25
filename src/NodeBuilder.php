@@ -23,38 +23,21 @@ use Drupal\clutch\clutchBuilder;
  * @package Drupal\clutch\Controller
  */
 class NodeBuilder extends ClutchBuilder{
-  public function getHTMLTemplate($template, $view_mode = 'full') {
+
+  /**
+   * Load template using twig engine.
+   * @param string $template, $view_mode
+   *
+   * @return string
+   *   Return html string from template
+   */
+  public function getHTMLTemplate($template, $view_mode = NULL) {
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
     return $this->twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
-  }
-  public function getHTMLTeaserTemplate($template){
-    $theme_array = $this->getCustomTheme();
-    $theme_path = array_values($theme_array)[0];
-    $twig_service = \Drupal::service('twig');
-    // $template name has the same name of directory that holds the template
-    // pass null array to pass validation. we don't need to replace any variables. this only return
-    // the html string to we can parse and handle it
-    return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-teaser.html.twig')->render(array());
-  }
-
-  public function findAndReplace($template, $entity, $view_mode) {
-    if($view_mode == 'full') {
-      $html = $this->getHTMLTemplate($template);
-      $crawler = new HtmlPageCrawler($html);
-      $html = $this->findAndReplaceValueForFields($crawler, $entity);
-      return $html;
-    }else {
-      $html = $this->getHTMLTeaserTemplate($template);
-      $crawler = new HtmlPageCrawler($html);
-      $html = $this->findAndReplaceValueForFields($crawler, $entity);
-      return $html;
-    }
-    // TODO: find and replace info.
-    
   }
 
   public function collectFieldValues($component, $field_definition) {
