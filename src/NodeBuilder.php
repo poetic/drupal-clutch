@@ -40,6 +40,23 @@ class NodeBuilder extends ClutchBuilder{
     // the html string to we can parse and handle it
     return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-teaser.html.twig')->render(array());
   }
+
+  public function findAndReplace($template, $entity, $view_mode) {
+    if($view_mode == 'full') {
+      $html = $this->getHTMLTemplate($template);
+      $crawler = new HtmlPageCrawler($html);
+      $html = $this->findAndReplaceValueForFields($crawler, $entity);
+      return $html;
+    }else {
+      $html = $this->getHTMLTeaserTemplate($template);
+      $crawler = new HtmlPageCrawler($html);
+      $html = $this->findAndReplaceValueForFields($crawler, $entity);
+      return $html;
+    }
+    // TODO: find and replace info.
+    
+  }
+
   public function collectFieldValues($component, $field_definition) {
     $bundle = $component->bundle();
     $field_name = $field_definition->getName();
@@ -129,7 +146,7 @@ class NodeBuilder extends ClutchBuilder{
   }
 
   public function getBundle(Crawler $crawler) {
-    $bundle = $crawler->filter('*')->getAttribute('data-content-type');
+    $bundle = $crawler->filter('*')->getAttribute('data-node');
     // $bundle_name = ucwords(str_replace('_', ' ', $bundle));
     return $bundle;
   }
