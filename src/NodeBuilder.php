@@ -40,7 +40,7 @@ class NodeBuilder extends ClutchBuilder{
     // the html string to we can parse and handle it
     return $twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-teaser.html.twig')->render(array());
   }
-  public function getFieldInfo($component, $field_definition) {
+  public function collectFieldValues($component, $field_definition) {
     $bundle = $component->bundle();
     $field_name = $field_definition->getName();
     $field_language = $field_definition->language()->getId();
