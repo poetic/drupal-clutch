@@ -18,7 +18,13 @@ use Drupal\clutch\NodeBuilder;
  */
 class ClutchAPINodeForm extends FormBase {
 
-   /**
+  private $node_builder;
+
+  public function __construct() {
+    $this->node_builder = new NodeBuilder();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -31,8 +37,7 @@ class ClutchAPINodeForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $listing_bundles = '';
     $existing_bundles = $this->getExistingBundles();
-    $clutch_node_builder = new NodeBuilder();
-    $theme_array = $clutch_node_builder->getCustomTheme();
+    $theme_array = $this->node_builder->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     $components_dir = scandir($theme_path . '/nodes/');
     $bundles_from_theme_directory = array();
@@ -118,8 +123,7 @@ class ClutchAPINodeForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $clutch_node_builder = new NodeBuilder();
-    $clutch_node_builder->createEntitiesFromTemplate($bundles);
+    $this->node_builder->createEntitiesFromTemplate($bundles);
   }
 
   public function getExistingBundles() {

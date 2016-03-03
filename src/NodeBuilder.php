@@ -31,7 +31,7 @@ class NodeBuilder extends ClutchBuilder{
    * @return string
    *   Return html string from template
    */
-  public function getHTMLTemplate($template, $view_mode = NULL) {
+  public function getHTMLTemplate($template, $view_mode = 'full') {
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     // $template name has the same name of directory that holds the template
