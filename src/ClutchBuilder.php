@@ -7,6 +7,10 @@
 
 namespace Drupal\clutch;
 
+require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/Helpers.php');
+require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.php');
+require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
+
 use Drupal\component\Entity\Component;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
@@ -25,7 +29,6 @@ use Wa72\HtmlPageDom\HtmlPageCrawler;
 abstract class ClutchBuilder {
 
   protected $twig_service;
-  
   public function __construct() {
     $this->twig_service = \Drupal::service('twig');
   }
@@ -275,7 +278,7 @@ abstract class ClutchBuilder {
 
   /**
    * Get front end theme directory
-   * @return 
+   * @return
    *  an array of theme namd and theme path
    */
   public function getCustomTheme() {
@@ -283,7 +286,7 @@ abstract class ClutchBuilder {
     foreach($themes as $theme) {
       if($theme->origin !== 'core') {
         return [$theme->getName() => $theme->getPath()];
-      } 
+      }
     }
   }
 }
