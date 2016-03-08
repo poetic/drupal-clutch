@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\clutch\ClutchBuilder.
+ * Contains \Drupal\clutch\NodeBuilder.
  */
 
 namespace Drupal\clutch;
@@ -18,7 +18,7 @@ use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\clutchBuilder;
 
 /**
- * Class ClutchBuilder.
+ * Class NodeBuilder.
  *
  * @package Drupal\clutch\Controller
  */
@@ -37,7 +37,11 @@ class NodeBuilder extends ClutchBuilder{
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return
     // the html string to we can parse and handle it
-    return $this->twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
+    if(file_exists($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')) {
+      return $this->twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
+    }else {
+       return FALSE;
+    }
   }
 
   public function collectFieldValues($component, $field_definition) {
@@ -86,13 +90,11 @@ class NodeBuilder extends ClutchBuilder{
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    //dpm($field);
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field['field_name'],
       'entity_type' => 'node',
       'type' => $field['field_type'],
-      // 'cardinality' => $field_info['cardinality'],
-      // 'cardinality' => 1,
+      'cardinality' => 1,
       'custom_storage' => FALSE,
     ]);
 
@@ -130,7 +132,6 @@ class NodeBuilder extends ClutchBuilder{
 
   public function getBundle(Crawler $crawler) {
     $bundle = $crawler->filter('*')->getAttribute('data-node');
-    // $bundle_name = ucwords(str_replace('_', ' ', $bundle));
     return $bundle;
   }
 }

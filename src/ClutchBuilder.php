@@ -20,7 +20,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
-
+use Drupal\clutch\ParagraphBuilder;
 /**
  * Class ClutchBuilder.
  *
@@ -79,12 +79,32 @@ abstract class ClutchBuilder {
           $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
         }elseif($field_type == 'image') {
           $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+        }elseif($field_type == 'entity_reference_revisions') {
+
+          $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit']);
+          
+          $temp = $crawler->filter('[data-field="'.$field_name.'"]')->getInnerHtml();
+          
+          $crawler->filter('[data-field="'.$field_name.'"]')->setInnerHtml('');
+          
+          foreach($field['value'] as $fields_in_paragraph) {
+            $paragraph_children = new HtmlPageCrawler($temp);
+            $test = $this->shit($paragraph_children, $fields_in_paragraph);
+            $crawler->filter('[data-field="'.$field_name.'"]')->append($test);
+          }
         }else {
           $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
         }
       }
     }
     return $crawler;
+  }
+
+  public function shit($crawler, $fields) {
+    foreach($fields['value'] as $field_name => $field) {
+      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+    }
+    return new HtmlPageCrawler('<div data-quickedit-entity-id="'.$fields['quickedit'].'">'.$crawler.'</div>');
   }
 
   /**
@@ -97,13 +117,25 @@ abstract class ClutchBuilder {
    *   array of fields belong to this object
    */
   public function collectFields($entity) {
+    $bundle = $entity->bundle();
     $fields = array();
     $fields_definition = $entity->getFieldDefinitions();
     foreach($fields_definition as $field_definition) {
      if(!empty($field_definition->getTargetBundle())) {
        if($field_definition->getType() == 'entity_reference_revisions') {
-        // TODO: handle paragraph fields
-
+        $paragraph_fields = array();
+        $field_name = $field_definition->getName();
+        $entity_paragraph_field = str_replace($bundle.'_', '', $field_name);
+        $field_values = $entity->get($field_name)->getValue();
+        $field_language = $field_definition->language()->getId();
+        foreach($field_values as $field_value) {
+          $paragraph = entity_load('paragraph', $field_value['target_id']);
+          $paragraph_builder = new ParagraphBuilder();
+          $paragraph_fields['paragraph_'.$paragraph->id()]['value']= $paragraph_builder->collectFields($paragraph, $field_definition);
+          $paragraph_fields['paragraph_'.$paragraph->id()]['quickedit'] = 'paragraph/' . $paragraph->id();
+        }
+        $fields[$entity_paragraph_field]['value'] = $paragraph_fields;
+        $fields[$entity_paragraph_field]['quickedit'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $field_name . '/' . $field_language . '/full';
        }else {
          $non_paragraph_field = $this->collectFieldValues($entity, $field_definition);
          $key = key($non_paragraph_field);
@@ -233,7 +265,6 @@ abstract class ClutchBuilder {
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
       $field_formatter = $node->extract(array('data-format-type'))[0];
-
       switch($field_type) {
         case 'link':
           $default_value['uri'] = $node->extract(array('href'))[0];
@@ -242,6 +273,17 @@ abstract class ClutchBuilder {
         case 'image':
           $default_value = $node->extract(array('src'))[0];
           break;
+        case 'entity_reference_revisions':
+          $paragraph_crawler = new HtmlPageCrawler($node->getInnerHtml());
+          $paragraph_bundle = $node->extract(array('data-paragraph'))[0];
+          $paragraph_builder = new ParagraphBuilder();
+          $paragraph_fields = $paragraph_builder->getFieldsInfoFromTemplate($paragraph_crawler, $paragraph_bundle);
+          $paragraph = array(
+            'id' => $paragraph_bundle,
+            'fields' => $paragraph_fields,
+          );
+          $paragraph_builder->createBundle($paragraph);
+          break;
         default:
           $default_value = $node->getInnerHtml();
           break;
@@ -249,6 +291,7 @@ abstract class ClutchBuilder {
       return array(
         'field_name' => $field_name,
         'field_type' => $field_type,
+        'field_paragraph' => $paragraph_bundle,
         'field_form_display' => $field_form_display,
         'field_formatter' => $field_formatter,
         'value' => $default_value,

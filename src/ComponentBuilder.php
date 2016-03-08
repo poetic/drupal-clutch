@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\clutch\ClutchBuilder.
+ * Contains \Drupal\clutch\ComponentBuilder.
  */
 
 namespace Drupal\clutch;
@@ -19,7 +19,7 @@ use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ClutchBuilder;
 
 /**
- * Class ClutchBuilder.
+ * Class ComponentBuilder.
  *
  * @package Drupal\clutch\Controller
  */
@@ -87,7 +87,7 @@ class ComponentBuilder extends ClutchBuilder{
         ));
       $this->updateAssociatedComponents($bundle_info['id']);
       $this->createFields($bundle_info);
-      $this->createComponentContent($bundle_info);
+      // $this->createComponentContent($bundle_info);
     }
   }
 
@@ -104,14 +104,26 @@ class ComponentBuilder extends ClutchBuilder{
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => $field['field_name'],
-      'entity_type' => 'component',
-      'type' => $field['field_type'],
-      // 'cardinality' => $field_info['cardinality'],
-      'cardinality' => 1,
-      'custom_storage' => FALSE,
-    ]);
+    if($field['field_type'] == 'entity_reference_revisions') {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field['field_name'],
+        'entity_type' => 'component',
+        'type' => $field['field_type'],
+        'cardinality' => -1,
+        'custom_storage' => FALSE,
+        'settings' => array(
+          'target_type' => 'paragraph'
+         ),
+      ]);
+    }else {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field['field_name'],
+        'entity_type' => 'component',
+        'type' => $field['field_type'],
+        'cardinality' => 1,
+        'custom_storage' => FALSE,
+      ]);
+    }
 
     $field_storage->save();
 
@@ -120,9 +132,19 @@ class ComponentBuilder extends ClutchBuilder{
       'field_storage' => $field_storage,
       'bundle' => $bundle,
       'label' => str_replace('_', ' ', $field['field_name']),
+
     ]);
 
     $field_instance->save();
+
+
+    if($field['field_type'] == 'entity_reference_revisions') {
+      $handler_settings = $field_instance->getSetting('handler_settings');      
+      $handler_settings['target_bundles'][$field['field_paragraph']] = $field['field_paragraph'];
+      $handler_settings['target_bundles_drag_drop'][$field['field_paragraph']]['enabled'] = TRUE;
+      $field_instance->setSetting('handler_settings', $handler_settings);
+      $field_instance->save();
+    }
 
     // Assign widget settings for the 'default' form mode.
     entity_get_form_display('component', $bundle, 'default')
