@@ -15,7 +15,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
-use Drupal\clutch\clutchBuilder;
+use Drupal\clutch\ClutchBuilder;
 
 /**
  * Class ParagraphBuilder.
@@ -80,10 +80,31 @@ class ParagraphBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->createFields($bundle_info);
-      return $this->createDefaultContentForEntity($bundle_info, 'paragraph');
+      $array_of_referenced_paragraph = array();
+      foreach($bundle_info['fields'] as $content) {
+        $bundle = array(
+          'id' => $bundle_info['id'],
+          'fields' => $content
+        );
+        $paragraph = $this->createDefaultContentForEntity($bundle, 'paragraph');
+        $temp['target_id'] = $paragraph->id();
+        $temp['target_revision_id'] = $paragraph->getRevisionId();
+        $array_of_referenced_paragraph[] = $temp;
+      }
+      dpm($array_of_referenced_paragraph);
+      return $array_of_referenced_paragraph;
     }
   }
   
+  /**
+   *  {@inheritdoc}
+   */
+  public function createFields($bundle) {
+    foreach($bundle['fields'][0] as $field) {
+      $this->createField($bundle['id'], $field);
+    }
+  }
+
   /**
    *  {@inheritdoc}
    */
@@ -101,13 +122,16 @@ class ParagraphBuilder extends ClutchBuilder{
     $field_storage->save();
 
     // create field instance for bundle
-    $field_instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => $bundle,
-      'label' => str_replace('_', ' ', $field['field_name']),
-    ]);
+    $field_instance = FieldConfig::loadByName('paragraph', $bundle ,$field['field_name']);
+    if(empty($field_instance)) {
+      $field_instance = FieldConfig::create([
+        'field_storage' => $field_storage,
+        'bundle' => $bundle,
+        'label' => str_replace('_', ' ', $field['field_name']),
+      ]);
 
-    $field_instance->save();
+      $field_instance->save();
+    }
 
     // Assign widget settings for the 'default' form mode.
      entity_get_form_display('paragraph', $bundle, 'default')
@@ -130,32 +154,35 @@ class ParagraphBuilder extends ClutchBuilder{
   }
 
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
-    $fields = $crawler->filterXPath('//*[@data-paragraph-field]')->each(function (Crawler $node, $i) use ($bundle) {
-      $field_type = $node->extract(array('data-type'))[0];
-      $field_name = $bundle . '_' . $node->extract(array('data-paragraph-field'))[0];
-      $field_form_display = $node->extract(array('data-form-type'))[0];
-      $field_formatter = $node->extract(array('data-format-type'))[0];
-      switch($field_type) {
-        case 'link':
-          $default_value['uri'] = $node->extract(array('href'))[0];
-          $default_value['title'] = $node->extract(array('_text'))[0];
-          break;
-        case 'image':
-          $default_value = $node->extract(array('src'))[0];
-          break;
-        default:
-          $default_value = $node->getInnerHtml();
-          break;
-      }
-      return array(
-        'field_name' => $field_name,
-        'field_type' => $field_type,
-        'field_form_display' => $field_form_display,
-        'field_formatter' => $field_formatter,
-        'value' => $default_value,
-      );
+    $collections = $crawler->filterXPath('//*[@class="collection"]')->each(function (Crawler $collection, $i) use ($bundle) {
+      $fields = $collection->filterXPath('//*[@data-paragraph-field]')->each(function (Crawler $node, $i) use ($bundle) {
+        $field_type = $node->extract(array('data-type'))[0];
+        $field_name = $bundle . '_' . $node->extract(array('data-paragraph-field'))[0];
+        $field_form_display = $node->extract(array('data-form-type'))[0];
+        $field_formatter = $node->extract(array('data-format-type'))[0];
+        switch($field_type) {
+          case 'link':
+            $default_value['uri'] = $node->extract(array('href'))[0];
+            $default_value['title'] = $node->extract(array('_text'))[0];
+            break;
+          case 'image':
+            $default_value = $node->extract(array('src'))[0];
+            break;
+          default:
+            $default_value = $node->getInnerHtml();
+            break;
+        }
+        return array(
+          'field_name' => $field_name,
+          'field_type' => $field_type,
+          'field_form_display' => $field_form_display,
+          'field_formatter' => $field_formatter,
+          'value' => $default_value,
+        );
+      });
+      return $fields;
     });
-    return $fields;
+    return $collections;
   }
 
 

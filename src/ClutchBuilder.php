@@ -7,6 +7,10 @@
 
 namespace Drupal\clutch;
 
+const QE_CLASS = 'quickedit-field';
+const QE_FIELD_ID = 'data-quickedit-field-id';
+const QE_ENTITY_ID = 'data-quickedit-entity-id';
+
 require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/Helpers.php');
 require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.php');
 require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
@@ -22,6 +26,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ParagraphBuilder;
+
 /**
  * Class ClutchBuilder.
  *
@@ -63,10 +68,11 @@ abstract class ClutchBuilder {
   }
 
   /**
-   * Add quickedit attribute for fields
+   * Find and replace values for entity
    *
-   * @param $crawler
+   * @param $crawler, $entity
    *   crawler instance of class Crawler - Symfony
+   *   entity object
    *
    * @return
    *   crawler instance with update html
@@ -76,34 +82,65 @@ abstract class ClutchBuilder {
     foreach($fields as $field_name => $field) {
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
-        if($field_type == 'link') {
-          $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
-        }elseif($field_type == 'image') {
-          $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
-        }elseif($field_type == 'entity_reference_revisions') {
+        switch($field_type) {
+          case 'link':
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            break;
 
-          $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit']);
-          
-          $temp = $crawler->filter('[data-field="'.$field_name.'"]')->getInnerHtml();
-          
-          $crawler->filter('[data-field="'.$field_name.'"]')->setInnerHtml('');
-          
-          foreach($field['value'] as $fields_in_paragraph) {
-            $paragraph_children = new HtmlPageCrawler($temp);
-            $test = $this->shit($paragraph_children, $fields_in_paragraph);
-            $crawler->filter('[data-field="'.$field_name.'"]')->append($test);
-          }
-        }else {
-          $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+          case 'image':
+            // remove quickedit for image
+            // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            break;
+
+          case 'entity_reference_revisions':
+            $crawler = $this->findAndReplaceValueForParagraph($field_name, $crawler, $field);
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');;
+            break;
+
+          default:
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
         }
       }
     }
     return $crawler;
   }
 
-  public function shit($crawler, $fields) {
+  /**
+   * Find and replace values for individual paragraph
+   *
+   * @param  $crawler, $field, $field_name
+   *   crawler instance of class Crawler - Symfony
+   *   array of field value
+   *   field name
+   *
+   * @return
+   *   crawler instance with update html
+   */
+  public function findAndReplaceValueForParagraph($field_name, $crawler, $field) {
+    $paragraph_template = $crawler->filter('[data-first-instance="1"]')->saveHTML();
+    $crawler->filter('[data-field="'.$field_name.'"]')->setInnerHtml('');
+    foreach($field['value'] as $fields_in_paragraph) {
+      $paragraph_children = new HtmlPageCrawler($paragraph_template);
+      $paragraph_children_html = $this->setupWrapperForParagraph($paragraph_children, $fields_in_paragraph);
+      $crawler->filter('[data-field="'.$field_name.'"]')->append($paragraph_children_html);
+    }
+    return $crawler;
+  }
+  /**
+   * wrap correct wrapper around individual paragraph
+   * to make it quickeditable
+   *
+   * @param $crawler, $fields
+   *   crawler of the paragraph
+   *   array of fields to replace in paragraph
+   *
+   * @return
+   *   crawler/html with correct wrapper for individual paragraph
+   */
+  public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
     }
     return new HtmlPageCrawler('<div data-quickedit-entity-id="'.$fields['quickedit'].'">'.$crawler.'</div>');
   }
@@ -283,7 +320,6 @@ abstract class ClutchBuilder {
         case 'entity_reference_revisions':
           // this crawler will crawl the paragraph html in the template
           $paragraph_crawler = new HtmlPageCrawler($node->getInnerHtml());
-          // $paragraph_bundle = $node->extract(array('data-paragraph'))[0];
           $paragraph_bundle = $node->extract(array('data-field'))[0];
           $paragraph_builder = new ParagraphBuilder();
           $paragraph_fields = $paragraph_builder->getFieldsInfoFromTemplate($paragraph_crawler, $paragraph_bundle);
@@ -378,7 +414,6 @@ abstract class ClutchBuilder {
     }
 
     foreach($content['fields'] as $field) {
-
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
         $image = File::create();
@@ -395,6 +430,7 @@ abstract class ClutchBuilder {
         );
         $entity->set($field['field_name'], $values);
       }else {
+
         $entity->set($field['field_name'], $field['value']);
       }
     }
@@ -404,6 +440,6 @@ abstract class ClutchBuilder {
         '@type' => $type,
         '@bundle' => $content['id'],
       ));
-    return $entity->id();
+    return $entity;
   }
 }

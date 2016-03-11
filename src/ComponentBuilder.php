@@ -86,9 +86,8 @@ class ComponentBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->updateAssociatedComponents($bundle_info['id']);
-
       $this->createFields($bundle_info);
-      // $this->createDefaultContentForEntity($bundle_info, 'component');
+      $this->createDefaultContentForEntity($bundle_info, 'component');
     }
   }
 
@@ -139,10 +138,10 @@ class ComponentBuilder extends ClutchBuilder{
 
 
     if($field['field_type'] == 'entity_reference_revisions') {
-      dpm($field);
+      $paragraph_bundle = str_replace($bundle . '_', '', $field['field_name']);
       $handler_settings = $field_instance->getSetting('handler_settings');      
-      $handler_settings['target_bundles'][$field['field_name']] = $field['field_name'];
-      $handler_settings['target_bundles_drag_drop'][$field['field_name']]['enabled'] = TRUE;
+      $handler_settings['target_bundles'][$paragraph_bundle] = $paragraph_bundle;
+      $handler_settings['target_bundles_drag_drop'][$paragraph_bundle]['enabled'] = TRUE;
       $field_instance->setSetting('handler_settings', $handler_settings);
       $field_instance->save();
     }
@@ -280,7 +279,7 @@ class ComponentBuilder extends ClutchBuilder{
     $bundle = $component->bundle();
     $quickedit = 'component/'. $component->id();
     $bundle_layer = $crawler->filter('[data-component="'. $bundle .'"]');
-    $bundle_layer->setAttribute('data-quickedit-entity-id', $quickedit)->addClass('contextual-region');
+    $bundle_layer->setAttribute(QE_ENTITY_ID, $quickedit)->addClass('contextual-region');
 
     $build_contextual_links['#contextual_links']['component'] = array(
       'route_parameters' =>array('component' => $component->id()),
