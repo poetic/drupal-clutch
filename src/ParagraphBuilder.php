@@ -80,6 +80,7 @@ class ParagraphBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->createFields($bundle_info);
+      return $this->createDefaultContentForEntity($bundle_info, 'paragraph');
     }
   }
   
@@ -93,8 +94,7 @@ class ParagraphBuilder extends ClutchBuilder{
       'field_name' => $field['field_name'],
       'entity_type' => 'paragraph',
       'type' => $field['field_type'],
-      // 'cardinality' => $field_info['cardinality'],
-      // 'cardinality' => 1,
+      'cardinality' => 1,
       'custom_storage' => FALSE,
     ]);
 
@@ -177,5 +177,4 @@ class ParagraphBuilder extends ClutchBuilder{
     $entity_info['fields'] = $fields;
     return $entity_info;
   }
-
 }

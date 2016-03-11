@@ -86,8 +86,9 @@ class ComponentBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->updateAssociatedComponents($bundle_info['id']);
+
       $this->createFields($bundle_info);
-      // $this->createComponentContent($bundle_info);
+      // $this->createDefaultContentForEntity($bundle_info, 'component');
     }
   }
 
@@ -132,16 +133,16 @@ class ComponentBuilder extends ClutchBuilder{
       'field_storage' => $field_storage,
       'bundle' => $bundle,
       'label' => str_replace('_', ' ', $field['field_name']),
-
     ]);
 
     $field_instance->save();
 
 
     if($field['field_type'] == 'entity_reference_revisions') {
+      dpm($field);
       $handler_settings = $field_instance->getSetting('handler_settings');      
-      $handler_settings['target_bundles'][$field['field_paragraph']] = $field['field_paragraph'];
-      $handler_settings['target_bundles_drag_drop'][$field['field_paragraph']]['enabled'] = TRUE;
+      $handler_settings['target_bundles'][$field['field_name']] = $field['field_name'];
+      $handler_settings['target_bundles_drag_drop'][$field['field_name']]['enabled'] = TRUE;
       $field_instance->setSetting('handler_settings', $handler_settings);
       $field_instance->save();
     }
@@ -199,47 +200,6 @@ class ComponentBuilder extends ClutchBuilder{
       $bundles[$bundle] = ucwords(str_replace('_', ' ', $label));
     }
     return $bundles;
-  }
-
-  /**
-   * Create default content for component
-   *
-   * @return
-   *  a component object
-   */
-  public function createComponentContent($content) {
-    $component = Component::create([
-      'type' => $content['id'],
-      'name' => ucwords(str_replace('_', ' ', $content['id'])),
-    ]);
-    $component->save();
-    foreach($content['fields'] as $field) {
-      if($field['field_type'] == 'image') {
-        $settings['file_directory'] = 'components/[date:custom:Y]-[date:custom:m]';
-        $image = File::create();
-        $image->setFileUri($field['value']);
-        $image->setOwnerId(\Drupal::currentUser()->id());
-        $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
-        $image->setFileName(drupal_basename($field['value']));
-        $destination_dir = 'public://components';
-        file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
-        $destination = $destination_dir . '/' . basename($field['value']);
-        $file = file_move($image, $destination, FILE_CREATE_DIRECTORY);
-
-        $values = array(
-          'target_id' => $file->id(),
-        );
-
-        $component->set($field['field_name'], $values);
-      }else {
-        $component->set($field['field_name'], $field['value']);
-      }
-    }
-    $component->save();
-    \Drupal::logger('clutch:workflow')->notice('Create content for bundle @bundle',
-      array(
-        '@bundle' => $content['id'],
-      ));
   }
 
   /**
@@ -338,7 +298,7 @@ class ComponentBuilder extends ClutchBuilder{
   /**
    * {@inheritdoc}
    */ 
-  public function findAndReplace($template, $component) {
+  public function findAndReplace($template, $component, $view_mode = NULL) {
     $html = parent::findAndReplace($template, $component);
     $html = $this->addQuickeditAttributeForBundle($html, $component);
     return $html;

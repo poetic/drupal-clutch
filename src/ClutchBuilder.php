@@ -12,6 +12,7 @@ require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.p
 require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
 
 use Drupal\component\Entity\Component;
+use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
@@ -265,25 +266,36 @@ abstract class ClutchBuilder {
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
       $field_formatter = $node->extract(array('data-format-type'))[0];
+      $default_value = NULL;
+      // potential paragraph field
+      $paragraph_bundle = NULL;
+
       switch($field_type) {
         case 'link':
           $default_value['uri'] = $node->extract(array('href'))[0];
           $default_value['title'] = $node->extract(array('_text'))[0];
           break;
+
         case 'image':
           $default_value = $node->extract(array('src'))[0];
           break;
+
         case 'entity_reference_revisions':
+          // this crawler will crawl the paragraph html in the template
           $paragraph_crawler = new HtmlPageCrawler($node->getInnerHtml());
-          $paragraph_bundle = $node->extract(array('data-paragraph'))[0];
+          // $paragraph_bundle = $node->extract(array('data-paragraph'))[0];
+          $paragraph_bundle = $node->extract(array('data-field'))[0];
           $paragraph_builder = new ParagraphBuilder();
           $paragraph_fields = $paragraph_builder->getFieldsInfoFromTemplate($paragraph_crawler, $paragraph_bundle);
           $paragraph = array(
             'id' => $paragraph_bundle,
             'fields' => $paragraph_fields,
           );
-          $paragraph_builder->createBundle($paragraph);
+          $field_form_display = 'entity_reference_paragraphs';
+          $field_formatter = 'entity_reference_revisions_entity_view';
+          $default_value = $paragraph_builder->createBundle($paragraph);
           break;
+
         default:
           $default_value = $node->getInnerHtml();
           break;
@@ -291,7 +303,6 @@ abstract class ClutchBuilder {
       return array(
         'field_name' => $field_name,
         'field_type' => $field_type,
-        'field_paragraph' => $paragraph_bundle,
         'field_form_display' => $field_form_display,
         'field_formatter' => $field_formatter,
         'value' => $default_value,
@@ -331,5 +342,68 @@ abstract class ClutchBuilder {
         return [$theme->getName() => $theme->getPath()];
       }
     }
+  }
+  
+  /**
+   * Create default content for entity
+   * 
+   * @param $content, $type
+   *  array of content information
+   *  entity type
+   *
+   * @return
+   *  paragraph object id
+   */
+  public function createDefaultContentForEntity($content, $type) {
+    $entity = NULL;
+    $file_directory = 'default';
+    switch($type) {
+      case 'component':
+        $entity = Component::create([
+          'type' => $content['id'],
+          'name' => ucwords(str_replace('_', ' ', $content['id'])),
+        ]);
+        $entity->save();
+        $file_directory = 'components/' . str_replace('_', ' ', $content['id']);
+        break;
+
+      case 'paragraph':
+        $entity = Paragraph::create([
+          'type' => $content['id'],
+          'title' => ucwords(str_replace('_', ' ', $content['id'])),
+        ]);
+        $entity->save();
+        $file_directory = 'paragraphs/' . str_replace('_', ' ', $content['id']);
+        break;
+    }
+
+    foreach($content['fields'] as $field) {
+
+      if($field['field_type'] == 'image') {
+        $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
+        $image = File::create();
+        $image->setFileUri($field['value']);
+        $image->setOwnerId(\Drupal::currentUser()->id());
+        $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
+        $image->setFileName(drupal_basename($field['value']));
+        $destination_dir = 'public://' . $file_directory;
+        file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
+        $destination = $destination_dir . '/' . basename($field['value']);
+        $file = file_move($image, $destination, FILE_CREATE_DIRECTORY);
+        $values = array(
+          'target_id' => $file->id(),
+        );
+        $entity->set($field['field_name'], $values);
+      }else {
+        $entity->set($field['field_name'], $field['value']);
+      }
+    }
+    $entity->save();
+    \Drupal::logger('clutch:workflow')->notice('Create content for type @type - bundle @bundle',
+      array(
+        '@type' => $type,
+        '@bundle' => $content['id'],
+      ));
+    return $entity->id();
   }
 }
