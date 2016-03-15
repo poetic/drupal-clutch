@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Functions to support theming in the {{themeName}} theme.
+ */
+
+use Drupal\clutch\ClutchNodeBuilder;
+/**
+* Implements hook_preprocess() for component.
+*/
+
+function {{themeMachine}}_preprocess_node(&$variables){
+  $node = $variables['node'];
+  $nodeBuilder = new ClutchNodeBuilder();
+  $contentTypeName = ($variables['node']->getType());
+  $content_type = str_replace('_', '-', $contentTypeName);
+  $findAndReplace = $nodeBuilder->findAndReplace($content_type, $node);
+  unset($variables['title_suffix']);
+  $variables['content']['#markup'] = $findAndReplace;
+}
