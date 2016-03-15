@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Install function for the clutch installation profile.
+ * Install function for the houston installation profile.
  */
 
 use Drupal\user\Entity\User;
@@ -13,7 +13,7 @@ use Drupal\user\Entity\User;
  *
  * @see system_install()
  */
-function clutch_install() {
+function houston_install() {
   // Now that all modules are installed, make sure the entity storage and other
   // handlers are up to date with the current entity and field definitions. For
   // example, Path module adds a base field to nodes and taxonomy terms after

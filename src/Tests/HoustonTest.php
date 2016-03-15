@@ -2,21 +2,21 @@
 
 /**
  * @file
- * Contains Drupal\clutch\Tests\ClutchTest.
+ * Contains Drupal\houston\Tests\ClutchTest.
  */
 
-namespace Drupal\clutch\Tests;
+namespace Drupal\houston\Tests;
 
 use Drupal\simpletest\WebTestBase;
 
 /**
  * Tests Clutch installation profile expectations.
  *
- * @group clutch
+ * @group houston
  */
-class ClutchTest extends WebTestBase {
+class HoustonTest extends WebTestBase {
 
-  protected $profile = 'clutch';
+  protected $profile = 'houston';
 
   /**
    * The admin user.
@@ -28,7 +28,7 @@ class ClutchTest extends WebTestBase {
   /**
    * Tests Clutch installation profile.
    */
-  function testClutch() {
+  function testHouston() {
     // Go to the home page and make sure we get a 200 response
     $this->drupalGet('');
     $this->assertResponse(200);
