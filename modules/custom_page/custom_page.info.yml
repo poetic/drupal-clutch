@@ -1,7 +1,9 @@
-name: Clutch: Custom Page
+name: Clutch: Page
 type: module
 description: Create pages.
 core: 8.x
 package: Clutch
 dependencies:
   - component
+  - token
+  - ctools

@@ -12,7 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
-use Drupal\clutch\ClutchBuilder;
+use Drupal\clutch\ComponentBuilder;
 /**
  * Prepares variables for Custom page templates.
  *
@@ -28,8 +28,15 @@ function template_preprocess_custom_page(array &$variables) {
   $components = $custom_page->get('associated_components')->getValue();
   foreach($components as $component) {
     $entity = entity_load('component', $component['target_id']);
-    $markup = custom_page_render_entity($entity);
-    $variables['content'][]['#markup'] = $markup;
+    if($entity->bundle() == 'component_view_reference') {
+      $view_reference = $entity->get('field_component_view')->getValue();
+      $view_id = array_pop($view_reference)['target_id'];
+      $view_render = views_embed_view($view_id);
+      $variables['content'][]['#markup'] = drupal_render($view_render);
+    }else {
+      $markup = custom_page_render_entity($entity);
+      $variables['content'][]['#markup'] = $markup;
+    }
   }
 }
 
@@ -37,9 +44,9 @@ function template_preprocess_custom_page(array &$variables) {
  * Return markup for component on custom page
  */
 function custom_page_render_entity($component) {
-	$component_type = $component->bundle();
-	$template_name = str_replace('_', '-', $component_type);
-	$clutch_builder = new ClutchBuilder();
-	$html = $clutch_builder->findAndReplace($template_name, $component);
-	return $html;
+  $component_type = $component->bundle();
+  $template_name = str_replace('_', '-', $component_type);
+  $clutch_builder = new ComponentBuilder();
+  $html = $clutch_builder->findAndReplace($template_name, $component);
+  return $html;
 }
