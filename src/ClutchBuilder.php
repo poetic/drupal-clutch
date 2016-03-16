@@ -265,7 +265,8 @@ abstract class ClutchBuilder {
    * @return
    *   An array of entity info.
    */
-  public function prepareEntityInfoFromTemplate($template) {
+  public function
+  prepareEntityInfoFromTemplate($template) {
     $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
     $entity_info = array();

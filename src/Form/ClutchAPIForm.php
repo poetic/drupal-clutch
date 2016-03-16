@@ -10,6 +10,7 @@ namespace Drupal\clutch\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\clutch\ComponentBuilder;
+use Drupal\clutch\FormBuilder;
 
 /**
  * Class clutchForm.
@@ -198,7 +199,9 @@ class ClutchAPIForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+    dpm($bundles);
+    //$this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+    dpm($this);
     drupal_set_message('Create Entity');
   }
 
