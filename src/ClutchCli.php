@@ -74,23 +74,17 @@ class ClutchCli {
       }
   }
 
-  function Directory($theme,$bundlezip){
-        $cssDir = "html/{$bundlezip}/css";
-        $jsDir = "html/{$bundlezip}/js";
-        $fontDir = "html/{$bundlezip}/fonts";
-        $imgDir = "html/{$bundlezip}/images";
-        $themecss = "{$theme}/css";
-        $themejs = "{$theme}/js";
-        $themefont = "{$theme}/fonts";
-        $themeimg = "{$theme}/images";
+  function Directory($Root,$themeDir,$theme,$bundlezip){
+        $cssDir = "temp/{$bundlezip}/css";
+        $jsDir = "temp/{$bundlezip}/js";
+        $fontDir = "temp/{$bundlezip}/fonts";
+        $imgDir = "temp/{$bundlezip}/images";
+        $themecss = "{$Root}/{$theme}/css";
+        $themejs = "{$Root}/{$theme}/js";
+        $themefont = "{$Root}/{$theme}/fonts";
+        $themeimg = "{$Root}/{$theme}/images";
         $tempInfo = __DIR__.'/../template';
-        $themeDir = __DIR__.'/themes/';
 
-        echo $themeDir;
-        // Create Theme folder.
-        if (!file_exists($theme)) {
-            mkdir($theme, 0777, true);
-        }
         // Move files from zip to new theme.
         if(!$cssDir){
           $output->writeln('<comment>Failed to find CSS folder. make sure you are using the webflow zip</comment>');
@@ -124,27 +118,27 @@ class ClutchCli {
           $this->recurse_copy($imgDir,$themeimg);
         }
 
-        $this->recurse_copy($tempInfo,$theme);
-        rename($theme.'/info.yml',$theme.'/'.$theme.'.info.yml');
-        rename($theme.'/libraries.yml',$theme.'/'.$theme.'.libraries.yml');
-        rename($theme.'/template.theme',$theme.'/'.$theme.'.theme');
+        $this->recurse_copy($tempInfo,$themeDir);
+        rename($themeDir.'/info.yml',$themeDir.'/'.$theme.'.info.yml');
+        rename($themeDir.'/libraries.yml',$themeDir.'/'.$theme.'.libraries.yml');
+        rename($themeDir.'/template.theme',$themeDir.'/'.$theme.'.theme');
     }
 
-    function ThemeTemplates($theme, $vars){
-      $template = file_get_contents($theme.'/'.$theme.'.info.yml', true);
+    function ThemeTemplates($themeDir,$theme, $vars){
+      $template = file_get_contents($themeDir.'/'.$theme.'.info.yml', true);
       $infoYML = $this->replace_tags($template, $vars);
-      file_put_contents($theme.'/'.$theme.'.info.yml', $infoYML);
+      file_put_contents($themeDir.'/'.$theme.'.info.yml', $infoYML);
 
-      $template = file_get_contents($theme.'/'.$theme.'.libraries.yml', true);
+      $template = file_get_contents($themeDir.'/'.$theme.'.libraries.yml', true);
       $infoYML = $this->replace_tags($template, $vars);
-      file_put_contents($theme.'/'.$theme.'.libraries.yml', $infoYML);
+      file_put_contents($themeDir.'/'.$theme.'.libraries.yml', $infoYML);
 
-      $template = file_get_contents($theme.'/'.$theme.'.theme', true);
+      $template = file_get_contents($themeDir.'/'.$theme.'.theme', true);
       $infoYML = $this->replace_tags($template, $vars);
-      file_put_contents($theme.'/'.$theme.'.theme', $infoYML);
+      file_put_contents($themeDir.'/'.$theme.'.theme', $infoYML);
     }
 
-    function Components($theme,$htmlfiles,$dataBundle,$bundle){
+    function Components($themeDir,$theme,$htmlfiles,$dataBundle,$bundle){
         $files = array();
             foreach($htmlfiles as &$file){
                 $bundle_file_name = basename($file,".html");
@@ -177,7 +171,7 @@ class ClutchCli {
                 //Generate files
                 $html_filename = basename($file);
                 $html_filename = str_replace('.html', '', $html_filename);
-                $theme_components = $theme."/".$bundle."/";
+                $theme_components = $themeDir."/".$bundle."/";
                 // var_dump($bundle_names);
                 if (!file_exists($theme_components)) {
                 mkdir($theme_components, 0777, true);
@@ -198,9 +192,10 @@ class ClutchCli {
                    mkdir($theme_components . $info[0] , 0777, true);
                   }
                   $filename = $theme_components . $info[0] . '/' . $info[0] . '.html.twig';
+                  $created = $bundle.'/'.$info[0] . '/' . $info[0] . '.html.twig';
                   file_put_contents($filename, $info[1]);
                   // $output->writeln('<comment>'.$filename.' </comment>');
-                  echo $filename. "\r\n";
+                  echo $created. "\r\n";
                 }
             }
     }

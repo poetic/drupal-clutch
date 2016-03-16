@@ -79,28 +79,29 @@ class CreateCommand extends Command {
       }
       $zip = new ZipArchive;
       if ($zip->open($withZip) === TRUE) {
-        $zip->extractTo('html/');
+        $zip->extractTo('temp/');
         $zip->close();
         $output->writeln('<info>Starting Theme creation process</info>');
       } else {
         $output->writeln('<comment>Failed to open the archive!</comment>');
         return false;
       }
-      $directory = "html/{$bundlezip}/";
+      $directory = "temp/{$bundlezip}/";
       $htmlfiles = glob($directory . "*.html");
       $themeMachine = strtolower(str_replace(" ","_",$theme));
+      $Root = getcwd().'/themes';
+      $themeDir = "{$Root}/{$theme}";
+
       $create = new ClutchCli;
-      $output->writeln('<info>hello!</info>');
-      $create->Directory($theme,$bundlezip);
-      
+      $create->Directory($Root,$themeDir,$theme,$bundlezip);
       $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
-      $create->ThemeTemplates($theme, $vars);
-      $create->Components($theme,$htmlfiles,'data-component','components');
-      $create->Components($theme,$htmlfiles,'data-bundle','components');
-      $create->Components($theme,$htmlfiles,'data-node','nodes');
-      $create->Components($theme,$htmlfiles,'data-view','views');
-      $create->Components($theme,$htmlfiles,'data-views-teaser','teaser');
-      $create->deleteDirectory('html');
-      $output->writeln('<info>Good Job your theme is ready!</info>');
+      $create->ThemeTemplates($themeDir,$theme, $vars);
+      $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
+      $create->Components($themeDir,$theme,$htmlfiles,'data-bundle','components');
+      $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
+      $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
+      $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
+      $create->deleteDirectory('temp');
+      $output->writeln('<info>You been Clutched!</info>');
     }
 }
