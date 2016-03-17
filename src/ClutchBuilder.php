@@ -79,6 +79,14 @@ abstract class ClutchBuilder {
    */
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
+    $crawler->filter('img')->each(function (Crawler $node, $i) {
+      if($node->filterXpath('//*[@data-field]')->count() == 0) {
+        $temp_url = $node->getAttribute('src');
+        $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
+        $full_url = $public_folder . '/' . $temp_url;
+        $node->setAttribute('src', $full_url);
+      }
+    });
     foreach($fields as $field_name => $field) {
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');

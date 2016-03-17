@@ -91,7 +91,6 @@ class ParagraphBuilder extends ClutchBuilder{
         $temp['target_revision_id'] = $paragraph->getRevisionId();
         $array_of_referenced_paragraph[] = $temp;
       }
-      dpm($array_of_referenced_paragraph);
       return $array_of_referenced_paragraph;
     }
   }
