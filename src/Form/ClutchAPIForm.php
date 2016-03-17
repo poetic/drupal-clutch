@@ -20,7 +20,7 @@ use Drupal\clutch\FormBuilder;
 class ClutchAPIForm extends FormBase {
 
   private $component_builder;
-
+  
   public function __construct() {
     $this->component_builder = new ComponentBuilder();
   }
@@ -199,9 +199,10 @@ class ClutchAPIForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    dpm($bundles);
-    //$this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+    dpm($bundles);   
     dpm($this);
+    $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+    //$this->form_builder->createEntitiesFromTemplate($bundles, 'component');
     drupal_set_message('Create Entity');
   }
 

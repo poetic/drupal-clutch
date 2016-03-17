@@ -333,6 +333,9 @@ abstract class ClutchBuilder {
           $default_value = $paragraph_builder->createBundle($paragraph);
           break;
 
+        case 'Email Form':
+          $form_crawler = new HtmlPageCrawler($node->getInnerHtml());
+
         default:
           $default_value = $node->getInnerHtml();
           break;
