@@ -44,6 +44,10 @@ class FormBuilder extends ClutchBuilder{
     }
   }
 
+  public function createEntitiesFromTemplate($bundles) {
+    parent::createEntitiesFromTemplate($bundles);
+  }
+
   public function collectFieldValues($component, $field_definition) {
     $bundle = $component->bundle();
     $field_name = $field_definition->getName();
@@ -64,13 +68,16 @@ class FormBuilder extends ClutchBuilder{
   }
 
   public function createBundle($bundle_info) {
-    if(entity_load('node_type', $bundle_info['id'])) {
+    if(entity_load('form_type', $bundle_info['id'])) { //what is node_type?
       // TODO Handle update bundle
       \Drupal::logger('clutch:workflow')->notice('Bundle exists. Need to update bundle.');
       // dpm('Cannot create bundle. Bundle exists. Need to update bundle.');
     }else {
       $bundle_label = ucwords(str_replace('_', ' ', $bundle_info['id']));
-      $node_type = entity_create('node_type', array(
+      Entity::create('contact_form', array(
+
+      ));
+      $form_type = entity_create('contact_form', array( //entity_create deprecated
         'id' => $bundle_info['id'],
         'label' => $bundle_label,
         // 'revision' => FALSE,
@@ -78,7 +85,7 @@ class FormBuilder extends ClutchBuilder{
         'name' => $bundle_label,
         //'description' => $bundle_info[],
       ));
-      $node_type->save();
+      $form_type->save();
       \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
         array(
           '@bundle' => $bundle_label,

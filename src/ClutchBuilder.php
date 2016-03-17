@@ -26,6 +26,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ParagraphBuilder;
+use Drupal\clutch\FormBuilder;
 
 /**
  * Class ClutchBuilder.
@@ -208,6 +209,11 @@ abstract class ClutchBuilder {
    */
   public function createEntitiesFromTemplate($bundles) {
     foreach($bundles as $bundle) {
+      if($bundle == "contact_us") {
+        $form_builder = new FormBuilder();
+        $bundle_info = $this->prepareEntityInfoFromTemplate($template); //originally called in createEntityFromTemplate
+        $form_builder->createBundle($bundleInfo);
+      }
       $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
   }
@@ -223,7 +229,8 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $this->createBundle($bundle_info);
+    dpm($bundle_info);
+//    $this->createBundle($bundle_info);
   }
 
   /**
@@ -333,8 +340,9 @@ abstract class ClutchBuilder {
           $default_value = $paragraph_builder->createBundle($paragraph);
           break;
 
-        case 'Email Form':
-          $form_crawler = new HtmlPageCrawler($node->getInnerHtml());
+        case 'formwrapper':
+//        form builder here? $form_crawler = new HtmlPageCrawler($node->getInnerHtml());
+          break;
 
         default:
           $default_value = $node->getInnerHtml();

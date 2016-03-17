@@ -199,10 +199,8 @@ class ClutchAPIForm extends FormBase {
     if(in_array('select_all', $bundles)){
       array_pop($bundles);
     }
-    dpm($bundles);   
-    dpm($this);
     $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
-    //$this->form_builder->createEntitiesFromTemplate($bundles, 'component');
+//    $this->form_builder->createEntitiesFromTemplate($bundles, 'component');
     drupal_set_message('Create Entity');
   }
 
