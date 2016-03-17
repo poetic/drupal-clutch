@@ -172,11 +172,11 @@ class ComponentBuilder extends ClutchBuilder{
    */
   public function createEntitiesFromTemplate($bundles) {
     parent::createEntitiesFromTemplate($bundles);
-    entity_get_form_display('custom_page', 'custom_page', 'default')
-      ->setComponent('associated_components', array(
-        'type' => 'entity_reference_autocomplete',
-      ))
-      ->save();
+//    entity_get_form_display('custom_page', 'custom_page', 'default')
+//      ->setComponent('associated_components', array(
+//        'type' => 'entity_reference_autocomplete',
+//      ))
+//      ->save();
   }
 
   /**

@@ -16,6 +16,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\clutchBuilder;
+use Drupal\contact\Entity\ContactForm;
 
 /**
  * Class FormBuilder.
@@ -68,29 +69,32 @@ class FormBuilder extends ClutchBuilder{
   }
 
   public function createBundle($bundle_info) {
-    if(entity_load('form_type', $bundle_info['id'])) { //what is node_type?
+    if(entity_load('contact_form', $bundle_info['id'])) { //what is node_type?
       // TODO Handle update bundle
       \Drupal::logger('clutch:workflow')->notice('Bundle exists. Need to update bundle.');
       // dpm('Cannot create bundle. Bundle exists. Need to update bundle.');
     }else {
       $bundle_label = ucwords(str_replace('_', ' ', $bundle_info['id']));
-      Entity::create('contact_form', array(
-
+      dpm($bundle_label);
+      $form_type = ContactForm::create(array(
+          'id' => $bundle_info['id'],
+          'label' => $bundle_label,
+          'type' => "contact_form",
       ));
-      $form_type = entity_create('contact_form', array( //entity_create deprecated
-        'id' => $bundle_info['id'],
-        'label' => $bundle_label,
-        // 'revision' => FALSE,
-        'type' => $bundle_info['id'],
-        'name' => $bundle_label,
-        //'description' => $bundle_info[],
-      ));
+//      $form_type = entity_create('contact_form', array( //entity_create deprecated
+//        'id' => $bundle_info['id'],
+//        'label' => $bundle_label,
+//        // 'revision' => FALSE,
+//        'type' => $bundle_info['id'],
+//        'name' => $bundle_label,
+//        //'description' => $bundle_info[],
+//      ));
       $form_type->save();
       \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
         array(
           '@bundle' => $bundle_label,
         ));
-      $this->createFields($bundle_info);
+//      $this->createFields($bundle_info);
     }
   }
 

@@ -211,10 +211,10 @@ abstract class ClutchBuilder {
     foreach($bundles as $bundle) {
       if($bundle == "contact_us") {
         $form_builder = new FormBuilder();
-        $bundle_info = $this->prepareEntityInfoFromTemplate($template); //originally called in createEntityFromTemplate
-        $form_builder->createBundle($bundleInfo);
+        $bundle_info = $this->prepareEntityInfoFromTemplate(str_replace('_', '-', $bundle)); //originally called in createEntityFromTemplate
+        $form_builder->createBundle($bundle_info);
       }
-      $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
+//      $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
   }
 
