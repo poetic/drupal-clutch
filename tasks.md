@@ -17,7 +17,7 @@ This order of the tasks based on the priorities of the MVP.
 - [ ] render form inside component
 
 ## Images	
-- [ ] route image to correct path "public://images/..."
+- [x] route image to correct path "public://images/..."
 - [ ] create image style programmatically. apply image style when render image
 - [ ] how do we decide which image is going to be image field
 
