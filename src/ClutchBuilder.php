@@ -26,6 +26,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ParagraphBuilder;
+use Drupal\clutch\TabBuilder;
 
 /**
  * Class ClutchBuilder.
@@ -79,14 +80,8 @@ abstract class ClutchBuilder {
    */
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
-    $crawler->filter('img')->each(function (Crawler $node, $i) {
-      if($node->filterXpath('//*[@data-field]')->count() == 0) {
-        $temp_url = $node->getAttribute('src');
-        $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
-        $full_url = $public_folder . '/' . $temp_url;
-        $node->setAttribute('src', $full_url);
-      }
-    });
+    $crawler = $this->routeImagePath($crawler);
+
     foreach($fields as $field_name => $field) {
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
@@ -115,6 +110,27 @@ abstract class ClutchBuilder {
   }
 
   /**
+   * Change image path before render
+   *
+   * @param  $crawler
+   *   crawler instance of class Crawler - Symfony
+   *
+   * @return
+   *   crawler instance with update html
+   */
+  public function routeImagePath(Crawler $crawler) {
+    $crawler->filter('img')->each(function (Crawler $node, $i) {
+      if($node->filterXpath('//*[@data-field]')->count() == 0) {
+        $temp_url = $node->getAttribute('src');
+        $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
+        $full_url = $public_folder . '/' . $temp_url;
+        $node->setAttribute('src', $full_url);
+      }
+    });
+    return $crawler;
+  }
+
+  /**
    * Find and replace values for individual paragraph
    *
    * @param  $crawler, $field, $field_name
@@ -126,13 +142,29 @@ abstract class ClutchBuilder {
    *   crawler instance with update html
    */
   public function findAndReplaceValueForParagraph($field_name, $crawler, $field) {
-    $paragraph_template = $crawler->filter('[data-first-instance="1"]')->saveHTML();
+    $paragraph_template = $crawler->filter('.collection')->eq(0)->saveHTML();
     $crawler->filter('[data-field="'.$field_name.'"]')->setInnerHtml('');
+    $index = 0;
     foreach($field['value'] as $fields_in_paragraph) {
       $paragraph_children = new HtmlPageCrawler($paragraph_template);
       $paragraph_children_html = $this->setupWrapperForParagraph($paragraph_children, $fields_in_paragraph);
       $crawler->filter('[data-field="'.$field_name.'"]')->append($paragraph_children_html);
+      if($crawler->filterXpath('//*[@data-w-tab]')->count()) {
+        $crawler->filter('.w-tab-link')->eq($index)->setInnerHtml($fields_in_paragraph['value']['tab_title']['content']['value']);
+        $index++;
+      }
     }
+    
+    $crawler->filter('.w-tab-pane')->each(function (Crawler $node, $i) {
+      $node->setAttribute('data-w-tab', "Tab " . ($i+1));
+      return $node;
+    });
+
+    if($crawler->filterXpath('//*[@data-w-tab]')->count()) {
+      $crawler->filter('.w-tab-pane')->removeClass('w--tab-active');
+      $crawler->filter('.w-tab-pane')->eq(0)->addClass('w--tab-active');
+    }
+
     return $crawler;
   }
   /**
@@ -150,7 +182,10 @@ abstract class ClutchBuilder {
     foreach($fields['value'] as $field_name => $field) {
       $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
     }
-    return new HtmlPageCrawler('<div data-quickedit-entity-id="'.$fields['quickedit'].'">'.$crawler.'</div>');
+    
+    $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
+    
+    return $crawler;
   }
 
   /**
@@ -312,8 +347,6 @@ abstract class ClutchBuilder {
       $field_form_display = $node->extract(array('data-form-type'))[0];
       $field_formatter = $node->extract(array('data-format-type'))[0];
       $default_value = NULL;
-      // potential paragraph field
-      $paragraph_bundle = NULL;
 
       switch($field_type) {
         case 'link':
@@ -326,24 +359,14 @@ abstract class ClutchBuilder {
           break;
 
         case 'entity_reference_revisions':
-          // this crawler will crawl the paragraph html in the template
-          $paragraph_crawler = new HtmlPageCrawler($node->getInnerHtml());
-          $paragraph_bundle = $node->extract(array('data-field'))[0];
-          $paragraph_builder = new ParagraphBuilder();
-          $paragraph_fields = $paragraph_builder->getFieldsInfoFromTemplate($paragraph_crawler, $paragraph_bundle);
-          $paragraph = array(
-            'id' => $paragraph_bundle,
-            'fields' => $paragraph_fields,
-          );
-          $field_form_display = 'entity_reference_paragraphs';
-          $field_formatter = 'entity_reference_revisions_entity_view';
-          $default_value = $paragraph_builder->createBundle($paragraph);
+          return $this->getFieldsInfoFromTemplateForParagraph($node, $field_name);
           break;
 
         default:
           $default_value = $node->getInnerHtml();
           break;
       }
+
       return array(
         'field_name' => $field_name,
         'field_type' => $field_type,
@@ -352,9 +375,35 @@ abstract class ClutchBuilder {
         'value' => $default_value,
       );
     });
+
     return $fields;
   }
 
+  function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
+    // this crawler will crawl the paragraph html in the template
+    $paragraph_crawler = new HtmlPageCrawler($crawler->getInnerHtml());
+    $paragraph_bundle = $crawler->extract(array('data-field'))[0];
+
+    //check if this is webflow tab component
+    if($crawler->filterXPath('//*[@data-w-tab]')->count()) {
+      $paragraph_builder = new TabBuilder();
+    }else {
+      $paragraph_builder = new ParagraphBuilder();
+    }
+    $paragraph_fields = $paragraph_builder->getFieldsInfoFromTemplate($paragraph_crawler, $paragraph_bundle);
+    $paragraph = array(
+      'id' => $paragraph_bundle,
+      'fields' => $paragraph_fields,
+    );
+    $default_value = $paragraph_builder->createBundle($paragraph);
+    return array(
+      'field_name' => $field_name,
+      'field_type' => 'entity_reference_revisions',
+      'field_form_display' => 'entity_reference_paragraphs',
+      'field_formatter' => 'entity_reference_revisions_entity_view',
+      'value' => $default_value,
+    );
+  }
   /**
    * Find bundles that need to be updated
    *
