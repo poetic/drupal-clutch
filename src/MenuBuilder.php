@@ -34,7 +34,7 @@ class MenuBuilder extends ClutchBuilder{
   public function getHTMLTemplate($template){
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
-    return $this->twig_service->loadTemplate($theme_path.'/templates/' . $template . '.html.twig')->render(array());
+    return $this->twig_service->loadTemplate($theme_path.'/menu/' . $template . '.html.twig')->render(array());
   }
 
   public function createMenu() {
@@ -53,9 +53,11 @@ class MenuBuilder extends ClutchBuilder{
     // dpm($crawler->filter('.dropdown')->count());
 
     $menu_links = $crawler->filter('.w-nav-link')->each(function (Crawler $node, $i) use ($menu_name) {
+      $link = strtolower($node->extract(array('_text'))[0]);
+      $link = str_replace(' ', '-', $link);
       $menu_link = MenuLinkContent::create([
           'title' => $node->extract(array('_text'))[0],
-          'link' => ['uri' => NULL],
+          'link' => ['uri' => 'internal:/' . $link],
           'menu_name' => $menu_name,
           'expanded' => TRUE,
       ]);
