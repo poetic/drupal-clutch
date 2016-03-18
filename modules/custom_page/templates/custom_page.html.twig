@@ -16,5 +16,7 @@
  */
 #}
 <div{{ attributes.addClass('custom_page') }}>
-  {{ content }}
+	{% for content in contents %}
+    {{ content|raw }}
+  {% endfor %}
 </div>
