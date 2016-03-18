@@ -417,7 +417,7 @@ abstract class ClutchBuilder {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
         $image = File::create();
-        $image->setFileUri($field['value']);
+        $image->setFileUri('public://' . $field['value']);
         $image->setOwnerId(\Drupal::currentUser()->id());
         $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
         $image->setFileName(drupal_basename($field['value']));
