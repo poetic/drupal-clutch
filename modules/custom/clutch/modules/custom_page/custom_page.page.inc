@@ -32,10 +32,10 @@ function template_preprocess_custom_page(array &$variables) {
       $view_reference = $entity->get('field_component_view')->getValue();
       $view_id = array_pop($view_reference)['target_id'];
       $view_render = views_embed_view($view_id);
-      $variables['content'][]['#markup'] = drupal_render($view_render);
+      $variables['contents'][] = drupal_render($view_render);
     }else {
       $markup = custom_page_render_entity($entity);
-      $variables['content'][]['#markup'] = $markup;
+      $variables['contents'][] = $markup;
     }
   }
 }

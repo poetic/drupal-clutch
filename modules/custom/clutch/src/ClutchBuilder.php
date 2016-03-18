@@ -85,29 +85,45 @@ abstract class ClutchBuilder {
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
-
     foreach($fields as $field_name => $field) {
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
         switch($field_type) {
           case 'link':
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title']);
+            break;
+
+          case 'iframe':
+
+            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('width', $field['content']['width'])->setAttribute('height', $field['content']['height']);
             break;
 
           case 'image':
             // remove quickedit for image
-            // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
-            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url']);
+            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+            if($crawler->filter('.w-lightbox')->count()) {
+              $crawler->filter('script')->remove();
+              $crawler->filter('.w-lightbox')->append('
+                <script type="application/json" class="w-json">
+                  { "items": [{
+                      "type": "image",
+                      "url": "'. $field['content']['url'] .'"
+                    }] 
+                  }
+                </script>');
+            }
             break;
 
           case 'entity_reference_revisions':
             $crawler = $this->findAndReplaceValueForParagraph($field_name, $crawler, $field);
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');;
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit']);
             break;
 
           default:
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setInnerHtml($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setInnerHtml($field['content']['value']);
         }
+        $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
     return $crawler;
@@ -204,9 +220,7 @@ abstract class ClutchBuilder {
     foreach($fields['value'] as $field_name => $field) {
       $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
     }
-    
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
-    
     return $crawler;
   }
 
@@ -383,6 +397,12 @@ abstract class ClutchBuilder {
         case 'entity_reference_revisions':
           return $this->getFieldsInfoFromTemplateForParagraph($node, $field_name);
           break;
+        
+        case 'iframe':
+          $default_value['url'] = $node->extract(array('src'))[0];
+          $default_value['width'] = $node->extract(array('width'))[0];
+          $default_value['height'] = $node->extract(array('height'))[0];
+          break;
 
         default:
           $default_value = $node->getInnerHtml();
@@ -509,7 +529,6 @@ abstract class ClutchBuilder {
         );
         $entity->set($field['field_name'], $values);
       }else {
-
         $entity->set($field['field_name'], $field['value']);
       }
     }
