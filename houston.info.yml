@@ -24,6 +24,7 @@ dependencies:
   - file
   - help
   - history
+  - iframe
   - image
   - linkit
   - menu_link_content
@@ -34,7 +35,7 @@ dependencies:
   - page_cache
   - path
   - pathauto
-  - paragraph
+  - paragraphs
   - quickedit
   - responsive_image
   - rdf
@@ -48,7 +49,6 @@ dependencies:
   - tour
   - views
   - views_ui
-  - clutch
 themes:
   - classy
   - seven
