@@ -98,6 +98,17 @@ abstract class ClutchBuilder {
             // remove quickedit for image
             // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
             $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+            if($crawler->filter('.w-lightbox')->count()) {
+              $crawler->filter('script')->remove();
+              $crawler->filter('.w-lightbox')->append('
+                <div class="w-json">
+                  { "items": [{
+                      "type": "image",
+                      "url": "'. $field['content']['url'] .'"
+                    }] 
+                  }
+                </div>');
+            }
             break;
 
           case 'entity_reference_revisions':
