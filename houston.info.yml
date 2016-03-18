@@ -19,6 +19,7 @@ dependencies:
   - dblog
   - editor
   - entity_reference
+  - entity_reference_revisions
   - field_ui
   - file
   - help
@@ -33,11 +34,13 @@ dependencies:
   - page_cache
   - path
   - pathauto
+  - paragraph
   - quickedit
   - responsive_image
   - rdf
   - search
   - shortcut
+  - special_menu_items
   - taxonomy
   - telephone
   - token

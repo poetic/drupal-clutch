@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies: {  }
+id: full_html
+label: 'Full HTML'
+description: 'Linkit profile for Full HTML'
+attributes:
+  target:
+    id: target
+    weight: 0
+    settings:
+      widget_type: select_list
+  title:
+    id: title
+    weight: 0
+    settings:
+      automatic_title: true
+matchers: {  }
