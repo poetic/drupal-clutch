@@ -67,7 +67,7 @@ class NodeBuilder extends ClutchBuilder{
     if(entity_load('node_type', $bundle_info['id'])) {
       // TODO Handle update bundle
       \Drupal::logger('clutch:workflow')->notice('Bundle exists. Need to update bundle.');
-      // dpm('Cannot create bundle. Bundle exists. Need to update bundle.');
+      drupal_set_message('Cannot create bundle. Bundle exists. Need to update bundle.');
     }else {
       $bundle_label = ucwords(str_replace('_', ' ', $bundle_info['id']));
       $node_type = entity_create('node_type', array(

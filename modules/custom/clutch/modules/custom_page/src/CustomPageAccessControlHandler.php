@@ -26,15 +26,15 @@ class CustomPageAccessControlHandler extends EntityAccessControlHandler {
     switch ($operation) {
       case 'view':
         if (!$entity->isPublished()) {
-          return AccessResult::allowedIfHasPermission($account, 'view unpublished Page entities');
+          return AccessResult::allowedIfHasPermission($account, 'view unpublished custom page entities');
         }
-        return AccessResult::allowedIfHasPermission($account, 'view published Page entities');
+        return AccessResult::allowedIfHasPermission($account, 'view published custom page entities');
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit Page entities');
+        return AccessResult::allowedIfHasPermission($account, 'edit custom page entities');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete Page entities');
+        return AccessResult::allowedIfHasPermission($account, 'delete custom page entities');
     }
 
     // Unknown operation, no opinion.
@@ -45,7 +45,7 @@ class CustomPageAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
-    return AccessResult::allowedIfHasPermission($account, 'add Page entities');
+    return AccessResult::allowedIfHasPermission($account, 'add custom page entities');
   }
 
 }
