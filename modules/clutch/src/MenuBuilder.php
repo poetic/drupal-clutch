@@ -37,11 +37,8 @@ class MenuBuilder extends ClutchBuilder{
     return $this->twig_service->loadTemplate($theme_path.'/menu/' . $template . '.html.twig')->render(array());
   }
 
-  public function createMenu() {
-    $html = $this->getHTMLTemplate('main-menu');
-    $crawler = new HtmlPageCrawler($html);
+  public function createMenu($crawler) {
     $menu_name = $crawler->getAttribute('data-menu');
-
     //check and see if the menu name exists
     if(!\Drupal::entityQuery('menu')->condition('id', $menu_name)->execute()){
       $menu = Menu::create(array(

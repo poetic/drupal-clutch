@@ -190,9 +190,9 @@ abstract class ClutchBuilder {
   }
 
   public function findAndReplaceValueForMenuLinks($crawler) {
-    $menu_item_template = $crawler->filter('.w-nav-link')->eq(0);
-    $menu_name = $crawler->getAttribute('data-menu')->text();
-    $crawler->filter('nav')->setInnerHtml('');
+    $menu_item_template = $crawler->filter('nav.nav-menu a')->eq(0);
+    $menu_name = $crawler->filterXpath('//*[@data-menu]')->extract('data-menu')[0];
+    $crawler->filter('nav.nav-menu')->setInnerHtml('');
     $menu_items = \Drupal::entityQuery('menu_link_content')->condition('menu_name',$menu_name)->sort('weight')->execute();
     $menu_item_objects = MenuLinkContent::loadMultiple($menu_items);
     foreach($menu_item_objects as $menu_item_object){
@@ -200,7 +200,7 @@ abstract class ClutchBuilder {
       $menu_item_uri = $menu_item_array['link'][0]['uri'];
       $menu_item_name = $menu_item_array['title'][0]['value'];
       $new_menu_link = $menu_item_template->setAttribute('href', $menu_item_uri)->text($menu_item_name);
-      $crawler->filter('nav')->append($new_menu_link->saveHTML());
+      $crawler->filter('nav.nav-menu')->append($new_menu_link->saveHTML());
     }
     return $crawler;
   }
@@ -302,8 +302,11 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $menu_builder = new MenuBuilder;
-    $menu_builder->createMenu();
+    $crawler = new HtmlPageCrawler($template);
+    if($crawler->filterXPath('//*[@data-w-tab]')->count()) {
+      $menu_builder = new MenuBuilder;
+      $menu_builder->createMenu($crawler);
+    }
     $this->createBundle($bundle_info);
   }
 
