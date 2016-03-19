@@ -197,7 +197,7 @@ abstract class ClutchBuilder {
     $menu_item_objects = MenuLinkContent::loadMultiple($menu_items);
     foreach($menu_item_objects as $menu_item_object){
       $menu_item_array = $menu_item_object->toArray();
-      $menu_item_uri = $menu_item_array['link'][0]['uri'];
+      $menu_item_uri = str_replace('internal:', '', $menu_item_array['link'][0]['uri']);
       $menu_item_name = $menu_item_array['title'][0]['value'];
       $new_menu_link = $menu_item_template->setAttribute('href', $menu_item_uri)->text($menu_item_name);
       $crawler->filter('nav.nav-menu')->append($new_menu_link->saveHTML());
