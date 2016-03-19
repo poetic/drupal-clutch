@@ -27,6 +27,7 @@ use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ParagraphBuilder;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\clutch\MenuBuilder;
 
 /**
  * Class ClutchBuilder.
@@ -134,10 +135,10 @@ abstract class ClutchBuilder {
 
   public function findAndReplaceValueForMenuLinks($crawler) {
     $menu_item_template = $crawler->filter('.w-nav-link')->eq(0);
-    $menu_name = $crawler->getAttribute('data-menu');
+    // $menu_name = $crawler->getAttribute('data-menu')->text();
     $crawler->filter('nav')->setInnerHtml('');
 
-    $menu_items = \Drupal::entityQuery('menu_link_content')->condition('menu_name',$menu_name)->sort('weight')->execute();
+    $menu_items = \Drupal::entityQuery('menu_link_content')->execute();
     $menu_item_objects = MenuLinkContent::loadMultiple($menu_items);
     foreach($menu_item_objects as $menu_item_object){
       $menu_item_array = $menu_item_object->toArray();
@@ -245,6 +246,8 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
+    $menu_builder = new MenuBuilder;
+    $menu_builder->createMenu();
     $this->createBundle($bundle_info);
   }
 

@@ -40,29 +40,31 @@ class MenuBuilder extends ClutchBuilder{
   public function createMenu() {
     $html = $this->getHTMLTemplate('main-menu');
     $crawler = new HtmlPageCrawler($html);
-
     $menu_name = $crawler->getAttribute('data-menu');
-    
-    $menu = Menu::create(array(
-      'id'=> $menu_name,
-      'label' => ucwords(str_replace('-', ' ', $menu_name)),
-    ));
-    $menu->save();
+
+    //check and see if the menu name exists
+    if(!\Drupal::entityQuery('menu')->condition('id', $menu_name)->execute()){
+      $menu = Menu::create(array(
+        'id'=> $menu_name,
+        'label' => ucwords(str_replace('-', ' ', $menu_name)),
+      ));
+      $menu->save();
 
     // check if menu has sub menu
     // dpm($crawler->filter('.dropdown')->count());
 
-    $menu_links = $crawler->filter('.w-nav-link')->each(function (Crawler $node, $i) use ($menu_name) {
-      $link = strtolower($node->extract(array('_text'))[0]);
-      $link = str_replace(' ', '-', $link);
-      $menu_link = MenuLinkContent::create([
-          'title' => $node->extract(array('_text'))[0],
-          'link' => ['uri' => 'internal:/' . $link],
-          'menu_name' => $menu_name,
-          'expanded' => TRUE,
-      ]);
-      $menu_link->save();
-    });
+      $menu_links = $crawler->filter('.w-nav-link')->each(function (Crawler $node, $i) use ($menu_name) {
+        $link = strtolower($node->extract(array('_text'))[0]);
+        $link = str_replace(' ', '-', $link);
+        $menu_link = MenuLinkContent::create([
+            'title' => $node->extract(array('_text'))[0],
+            'link' => ['uri' => 'internal:/' . $link],
+            'menu_name' => $menu_name,
+            'expanded' => TRUE,
+        ]);
+        $menu_link->save();
+      });
+    }
   }
 
   public function collectFieldValues($entity, $field_definition) {
