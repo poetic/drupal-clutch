@@ -44,11 +44,11 @@ class NodeBuilder extends ClutchBuilder{
     }
   }
 
-  public function collectFieldValues($component, $field_definition) {
-    $bundle = $component->bundle();
+  public function collectFieldValues($node, $field_definition) {
+    $bundle = $node->bundle();
     $field_name = $field_definition->getName();
     $field_language = $field_definition->language()->getId();
-    $field_value = $component->get($field_name)->getValue();
+    $field_value = $node->get($field_name)->getValue();
     $field_type = $field_definition->getType();
     if($field_type == 'image') {
       $file = File::load($field_value[0]['target_id']);
@@ -56,7 +56,7 @@ class NodeBuilder extends ClutchBuilder{
       $field_value[0]['url'] = $url;
     }
 
-    $field_attribute = 'node/' . $component->id() . '/' . $field_name . '/' . $field_language . '/full';
+    $field_attribute = 'node/' . $node->id() . '/' . $field_name . '/' . $field_language . '/full';
     return [str_replace($bundle.'_', '', $field_name) => array(
       'content' => $field_value[0],
       'quickedit' => $field_attribute,

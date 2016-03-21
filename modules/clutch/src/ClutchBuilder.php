@@ -127,6 +127,11 @@ abstract class ClutchBuilder {
         $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
+    
+    // Find and replace title last
+    if($entity->getEntityTypeId() == 'node') {
+      $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
+    }
     return $crawler;
   }
 
@@ -259,6 +264,10 @@ abstract class ClutchBuilder {
          $fields[$key] = $non_paragraph_field[$key];
        }
      }
+    }
+    if($entity->getEntityTypeId() == 'node') {
+      $fields['title']['content']['value'] = $entity->getTitle();
+      $fields['title']['quickedit'] = 'node/' . $entity->id() . '/title/en/full';
     }
     return $fields;
   }
