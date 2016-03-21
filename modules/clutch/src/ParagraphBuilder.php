@@ -91,7 +91,6 @@ class ParagraphBuilder extends ClutchBuilder{
         $temp['target_revision_id'] = $paragraph->getRevisionId();
         $array_of_referenced_paragraph[] = $temp;
       }
-      dpm($array_of_referenced_paragraph);
       return $array_of_referenced_paragraph;
     }
   }
@@ -154,7 +153,7 @@ class ParagraphBuilder extends ClutchBuilder{
   }
 
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
-    $collections = $crawler->filterXPath('//*[@class="collection"]')->each(function (Crawler $collection, $i) use ($bundle) {
+    $collections = $crawler->filter('.collection')->each(function (Crawler $collection, $i) use ($bundle) {
       $fields = $collection->filterXPath('//*[@data-paragraph-field]')->each(function (Crawler $node, $i) use ($bundle) {
         $field_type = $node->extract(array('data-type'))[0];
         $field_name = $bundle . '_' . $node->extract(array('data-paragraph-field'))[0];

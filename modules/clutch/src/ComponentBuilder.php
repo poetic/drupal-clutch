@@ -17,6 +17,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ClutchBuilder;
+use Drupal\clutch\MenuBuilder;
 
 /**
  * Class ComponentBuilder.
@@ -185,7 +186,8 @@ class ComponentBuilder extends ClutchBuilder{
    *  {@inheritdoc}
    */
   public function getBundle(Crawler $crawler) {
-    $bundle = $crawler->filter('*')->getAttribute('data-component');
+
+    $bundle = $crawler->getAttribute('data-component');
     return $bundle;
   }
 
