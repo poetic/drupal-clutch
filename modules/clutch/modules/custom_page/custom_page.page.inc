@@ -33,6 +33,16 @@ function template_preprocess_custom_page(array &$variables) {
       $view_id = array_pop($view_reference)['target_id'];
       $view_render = views_embed_view($view_id);
       $variables['contents'][] = drupal_render($view_render);
+    }elseif($entity->bundle() == 'component_form_reference') {
+      $form_reference = $entity->get('field_form_reference')->getValue();
+      $form_id = array_pop($form_reference)['target_id'];
+      $message = \Drupal::entityManager()
+        ->getStorage('contact_message')
+        ->create(array(
+          'contact_form' => $form_id,
+        ));
+      $form = \Drupal::service('entity.form_builder')->getForm($message);
+      $variables['contents'][] = $form;
     }else {
       $markup = custom_page_render_entity($entity);
       $variables['contents'][] = $markup;
