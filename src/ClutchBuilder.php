@@ -212,9 +212,11 @@ abstract class ClutchBuilder {
       if($bundle == "contact_us") {
         $form_builder = new FormBuilder();
         $bundle_info = $this->prepareEntityInfoFromTemplate(str_replace('_', '-', $bundle)); //originally called in createEntityFromTemplate
+        // refactor to (optionally?) pass in builder object to createBundle
         $form_builder->createBundle($bundle_info);
+      } else {
+        $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
       }
-//      $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
   }
 
@@ -229,8 +231,7 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    dpm($bundle_info);
-//    $this->createBundle($bundle_info);
+    $this->createBundle($bundle_info);
   }
 
   /**

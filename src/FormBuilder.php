@@ -17,6 +17,8 @@ use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\clutchBuilder;
 use Drupal\contact\Entity\ContactForm;
+use Drupal\clutch\ExampleForm;
+use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * Class FormBuilder.
@@ -71,44 +73,38 @@ class FormBuilder extends ClutchBuilder{
   public function createBundle($bundle_info) {
     if(entity_load('contact_form', $bundle_info['id'])) { //what is node_type?
       // TODO Handle update bundle
+      dpm('exists');
       \Drupal::logger('clutch:workflow')->notice('Bundle exists. Need to update bundle.');
       // dpm('Cannot create bundle. Bundle exists. Need to update bundle.');
-    }else {
+    } else {
       $bundle_label = ucwords(str_replace('_', ' ', $bundle_info['id']));
-      dpm($bundle_label);
       $form_type = ContactForm::create(array(
           'id' => $bundle_info['id'],
           'label' => $bundle_label,
           'type' => "contact_form",
       ));
-//      $form_type = entity_create('contact_form', array( //entity_create deprecated
-//        'id' => $bundle_info['id'],
-//        'label' => $bundle_label,
-//        // 'revision' => FALSE,
-//        'type' => $bundle_info['id'],
-//        'name' => $bundle_label,
-//        //'description' => $bundle_info[],
-//      ));
       $form_type->save();
       \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
         array(
           '@bundle' => $bundle_label,
         ));
-//      $this->createFields($bundle_info);
+      $this->createFields($bundle_info);
     }
   }
 
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
+//    $new_field = BaseFieldDefinition::create('string');
+//    dpm($new_field);
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field['field_name'],
-      'entity_type' => 'node',
-      'type' => $field['field_type'],
+      'entity_type' => 'contact_message',
+      'type' => 'string',
       'cardinality' => 1,
       'custom_storage' => FALSE,
     ]);
-
+//    dpm($field_storage);
     $field_storage->save();
 
     // create field instance for bundle
@@ -121,25 +117,37 @@ class FormBuilder extends ClutchBuilder{
     $field_instance->save();
 
     // // Assign widget settings for the 'default' form mode.
-     entity_get_form_display('node', $bundle, 'default')
-       ->setComponent($field['field_name'], array(
-         'type' => $field['field_form_display'],
-       ))
-       ->save();
+//     entity_get_form_display('node', $bundle, 'default')
+//       ->setComponent($field['field_name'], array(
+//         'type' => $field['field_form_display'],
+//       ))
+//       ->save();
+//
+//    // // Assign display settings for 'default' view mode.
+//     entity_get_display('node', $bundle, 'default')
+//       ->setComponent($field['field_name'], array(
+//         'label' => 'hidden',
+//         'type' => $field['field_formatter'],
+//       ))
+//       ->save();
+//      \Drupal::logger('clutch:workflow')->notice('Create field @field for bundle @bundle',
+//       array(
+//         '@field' => str_replace('_', ' ', $field['field_name']),
+//         '@bundle' => $bundle,
+//       ));
+}
 
-    // // Assign display settings for 'default' view mode.
-     entity_get_display('node', $bundle, 'default')
-       ->setComponent($field['field_name'], array(
-         'label' => 'hidden',
-         'type' => $field['field_formatter'],
-       ))
-       ->save();
-      \Drupal::logger('clutch:workflow')->notice('Create field @field for bundle @bundle',
-       array(
-         '@field' => str_replace('_', ' ', $field['field_name']),
-         '@bundle' => $bundle,
-       ));
-  }
+public function
+prepareEntityInfoFromTemplate($template) {
+  $html = $this->getHTMLTemplate($template);
+  $crawler = new HtmlPageCrawler($html);
+  $entity_info = array();
+  $bundle = $this->getBundle($crawler);
+  $entity_info['id'] = $bundle;
+  $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
+  $entity_info['fields'] = $fields;
+  return $entity_info;
+}
 
   public function getBundle(Crawler $crawler) {
     $bundle = $crawler->filter('*')->getAttribute('data-node');
