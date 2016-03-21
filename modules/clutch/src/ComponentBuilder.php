@@ -39,6 +39,10 @@ class ComponentBuilder extends ClutchBuilder{
     return $this->twig_service->loadTemplate($theme_path.'/components/'.$template.'/'.$template.'.html.twig')->render(array());
   }
 
+  public function getWrapperForComponentView($template) {
+    $crawler = new HtmlPageCrawler($this->getHTMLTemplate($template));
+    return $crawler;
+  }
   /**
    *  {@inheritdoc}
    */
