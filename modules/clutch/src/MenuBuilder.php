@@ -38,7 +38,7 @@ class MenuBuilder extends ClutchBuilder{
   }
 
   public function createMenu($crawler) {
-    $menu_name = $crawler->getAttribute('data-menu');
+    $menu_name = $crawler->filterXPath('//*[@data-menu]')->getAttribute('data-menu');
     //check and see if the menu name exists
     if(!\Drupal::entityQuery('menu')->condition('id', $menu_name)->execute()){
       $menu = Menu::create(array(

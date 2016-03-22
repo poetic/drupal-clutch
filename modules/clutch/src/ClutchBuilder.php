@@ -228,7 +228,7 @@ abstract class ClutchBuilder {
    */
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->text($field['content']['value']);
     }
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
     return $crawler;
@@ -316,8 +316,8 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $crawler = new HtmlPageCrawler($template);
-    if($crawler->filterXPath('//*[@data-w-tab]')->count()) {
+    $crawler = new HtmlPageCrawler($this->getHTMLTemplate($template));
+    if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
