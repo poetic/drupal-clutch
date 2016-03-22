@@ -71,14 +71,14 @@ class ClutchAPIForm extends FormBase {
 
     $match_bundles = array_intersect_key($existing_bundles, $bundles_from_theme_directory);
 
-    $to_update_bundles = $this->component_builder->getNeedUpdateComponents($match_bundles);
-    if(count($to_update_bundles) > 0){
-      $to_update_bundles['select_all'] = 'Select All';
-    }
+    // $to_update_bundles = $this->component_builder->getNeedUpdateComponents($match_bundles);
+    // if(count($to_update_bundles) > 0){
+    //   $to_update_bundles['select_all'] = 'Select All';
+    // }
 
-    foreach($to_update_bundles as $bundle => $label) {
-      $to_update_bundles[$bundle] = $label . ' (This bundle has changes! Need to delete and create a new one)';
-    }
+    // foreach($to_update_bundles as $bundle => $label) {
+    //   $to_update_bundles[$bundle] = $label . ' (This bundle has changes! Need to delete and create a new one)';
+    // }
 
     foreach($existing_bundles as $bundle) {
       $listing_bundles .= '<li>'.$bundle.'</li>';
@@ -133,31 +133,31 @@ class ClutchAPIForm extends FormBase {
       );
       $delete = TRUE;
     }
-    if ($to_update_bundles){
-      $form['update_bundles_wrapper'] = array(
-        '#type' => 'details',
-        '#prefix' => '<div class="action update-bundles">',
-        '#suffix' => '</div>',
-        '#title' => 'Update Bundles in template',
-        '#open' => TRUE,
-      );
+    // if ($to_update_bundles){
+    //   $form['update_bundles_wrapper'] = array(
+    //     '#type' => 'details',
+    //     '#prefix' => '<div class="action update-bundles">',
+    //     '#suffix' => '</div>',
+    //     '#title' => 'Update Bundles in template',
+    //     '#open' => TRUE,
+    //   );
 
-      $form['update_bundles_wrapper']['update-bundles'] = array(
-        '#type' => 'checkboxes',
-        // '#title' => t('Update Bundles in template'),
-        '#options' => $to_update_bundles,
-      );
+    //   $form['update_bundles_wrapper']['update-bundles'] = array(
+    //     '#type' => 'checkboxes',
+    //     // '#title' => t('Update Bundles in template'),
+    //     '#options' => $to_update_bundles,
+    //   );
 
-      $form['update_bundles_wrapper']['update'] = array(
-        '#type' => 'submit',
-        '#value' => t('Update'),
-        '#submit' => [[$this, 'updateComponents']],
-        '#attributes' => array(
-          'class' => array('button--primary'),
-        ),
-      );
-      $update = TRUE;
-    }
+    //   $form['update_bundles_wrapper']['update'] = array(
+    //     '#type' => 'submit',
+    //     '#value' => t('Update'),
+    //     '#submit' => [[$this, 'updateComponents']],
+    //     '#attributes' => array(
+    //       'class' => array('button--primary'),
+    //     ),
+    //   );
+    //   $update = TRUE;
+    // }
 
     if (!$create && !$update && !$delete) {
       $form['upToDate'] = array(
@@ -212,13 +212,13 @@ class ClutchAPIForm extends FormBase {
     drupal_set_message('Delete Entity');
   }
 
-  public function updateComponents(array &$form, FormStateInterface $form_state) {
-    $submission_values = $form_state->getValues();
-    $bundles = array_filter(array_values($submission_values['update-bundles']));
-    if(in_array('select_all', $bundles)){
-      array_pop($bundles);
-    }
-    $this->component_builder->updateEntities($bundles);
-    drupal_set_message('Update Entity');
-  }
+  // public function updateComponents(array &$form, FormStateInterface $form_state) {
+  //   $submission_values = $form_state->getValues();
+  //   $bundles = array_filter(array_values($submission_values['update-bundles']));
+  //   if(in_array('select_all', $bundles)){
+  //     array_pop($bundles);
+  //   }
+  //   $this->component_builder->updateEntities($bundles);
+  //   drupal_set_message('Update Entity');
+  // }
 }
