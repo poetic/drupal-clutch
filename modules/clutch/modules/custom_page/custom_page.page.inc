@@ -33,7 +33,13 @@ function template_preprocess_custom_page(array &$variables) {
       $view_id = array_pop($view_reference)['target_id'];
       $view_render = views_embed_view($view_id);
       $variables['contents'][] = drupal_render($view_render);
-    }else {
+    }elseif($entity->bundle() == 'component_block_reference') {
+      $block_reference = $entity->get('field_blocks_reference')->getValue();
+      $block_id = array_pop($block_reference)['target_id'];
+      $block = \Drupal\block\Entity\Block::load($block_id);
+      $render = \Drupal::entityManager()->getViewBuilder('block')->view($block);
+      $variables['contents'][] = $render;
+    }else{
       $markup = custom_page_render_entity($entity);
       $variables['contents'][] = $markup;
     }
