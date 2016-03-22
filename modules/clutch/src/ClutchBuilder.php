@@ -131,6 +131,11 @@ abstract class ClutchBuilder {
     // Find and replace title last
     if($entity->getEntityTypeId() == 'node') {
       $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
+      $date = $entity->get('created')->value;
+      $date = date('M d Y', $date);
+      if($crawler->filter('[data-date="date"]')->count()) {
+        $crawler->filter('[data-date="date"]')->text($date);
+      }
     }
     return $crawler;
   }

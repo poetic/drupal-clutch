@@ -50,7 +50,7 @@ class NodeBuilder extends ClutchBuilder{
     $field_language = $field_definition->language()->getId();
     $field_value = $node->get($field_name)->getValue();
     $field_type = $field_definition->getType();
-    if($field_type == 'image') {
+    if($field_type == 'image' && isset($field_value)) {
       $file = File::load($field_value[0]['target_id']);
       $url = file_create_url($file->get('uri')->value);
       $field_value[0]['url'] = $url;
