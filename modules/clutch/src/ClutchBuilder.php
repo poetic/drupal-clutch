@@ -536,11 +536,10 @@ abstract class ClutchBuilder {
           $image->setOwnerId(\Drupal::currentUser()->id());
           $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
           $image->setFileName(drupal_basename($field['value']));
-          dpm($image);
           $destination_dir = 'public://' . $file_directory;
           file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
           $destination = $destination_dir . '/' . basename($field['value']);
-          $file = file_move($image, $destination);
+          $file = file_copy($image, $destination);
           $values = array(
             'target_id' => $file->id(),
           );
