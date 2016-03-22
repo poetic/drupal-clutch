@@ -529,19 +529,23 @@ abstract class ClutchBuilder {
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
-        $image = File::create();
-        $image->setFileUri('public://' . $field['value']);
-        $image->setOwnerId(\Drupal::currentUser()->id());
-        $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
-        $image->setFileName(drupal_basename($field['value']));
-        $destination_dir = 'public://' . $file_directory;
-        file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
-        $destination = $destination_dir . '/' . basename($field['value']);
-        $file = file_move($image, $destination, FILE_CREATE_DIRECTORY);
-        $values = array(
-          'target_id' => $file->id(),
-        );
-        $entity->set($field['field_name'], $values);
+        $uri = 'public://' . $field['value'];
+        if (file_exists($uri)) {
+          $image = File::create();
+          $image->setFileUri($uri);
+          $image->setOwnerId(\Drupal::currentUser()->id());
+          $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
+          $image->setFileName(drupal_basename($field['value']));
+          dpm($image);
+          $destination_dir = 'public://' . $file_directory;
+          file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
+          $destination = $destination_dir . '/' . basename($field['value']);
+          $file = file_move($image, $destination);
+          $values = array(
+            'target_id' => $file->id(),
+          );
+          $entity->set($field['field_name'], $values);
+        }
       }else {
         $entity->set($field['field_name'], $field['value']);
       }
