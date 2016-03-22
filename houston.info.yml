@@ -49,6 +49,7 @@ dependencies:
   - tour
   - views
   - views_ui
+  - clutch
 themes:
   - classy
   - seven
