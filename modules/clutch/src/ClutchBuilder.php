@@ -26,7 +26,6 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\ParagraphBuilder;
-use Drupal\clutch\FormBuilder;
 use Drupal\clutch\TabBuilder;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\clutch\MenuBuilder;
@@ -297,14 +296,7 @@ abstract class ClutchBuilder {
    */
   public function createEntitiesFromTemplate($bundles) {
     foreach($bundles as $bundle) {
-      if($bundle == "contact_us") {
-        $form_builder = new FormBuilder();
-        $bundle_info = $this->prepareEntityInfoFromTemplate(str_replace('_', '-', $bundle)); //originally called in createEntityFromTemplate
-        // refactor to (optionally?) pass in builder object to createBundle
-        $form_builder->createBundle($bundle_info);
-      } else {
-        $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
-      }
+      $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
   }
 
@@ -321,10 +313,18 @@ abstract class ClutchBuilder {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
     $crawler = new HtmlPageCrawler($template);
     if($crawler->filterXPath('//*[@data-w-tab]')->count()) {
+      dpm('menu');
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
+//    } else if ($crawler->filterXPath('//*[@form]')->count()) {
+    } else if ($template == 'contact-us') {
+      dpm('form');
+      $form_builder = new FormBuilder();
+      $form_builder->createBundle($bundle_info);
+    } else {
+      dpm('component');
+      $this->createBundle($bundle_info);
     }
-    $this->createBundle($bundle_info);
   }
 
   /**
@@ -366,8 +366,7 @@ abstract class ClutchBuilder {
    * @return
    *   An array of entity info.
    */
-  public function
-  prepareEntityInfoFromTemplate($template) {
+  public function prepareEntityInfoFromTemplate($template) {
     $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
     $entity_info = array();
@@ -425,10 +424,6 @@ abstract class ClutchBuilder {
           $default_value['url'] = $node->extract(array('src'))[0];
           $default_value['width'] = $node->extract(array('width'))[0];
           $default_value['height'] = $node->extract(array('height'))[0];
-          break;
-
-        case 'formwrapper':
-//        form builder here? $form_crawler = new HtmlPageCrawler($node->getInnerHtml());
           break;
 
         default:

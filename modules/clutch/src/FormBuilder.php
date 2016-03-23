@@ -7,6 +7,7 @@
 
 namespace Drupal\clutch;
 
+use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
@@ -19,6 +20,7 @@ use Drupal\clutch\clutchBuilder;
 use Drupal\contact\Entity\ContactForm;
 use Drupal\clutch\ExampleForm;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 
 /**
  * Class FormBuilder.
@@ -34,14 +36,27 @@ class FormBuilder extends ClutchBuilder{
    * @return string
    *   Return html string from template
    */
-  
+
+  /**
+   * Get existing component types
+   * @return
+   *  an array of existing component types
+   */
+  public function getExistingBundles() {
+    $bundles = \Drupal::entityQuery('component_type')->condition('id', ['component_view_reference'], 'NOT IN')->execute();
+    foreach($bundles as $bundle => $label) {
+      $bundles[$bundle] = ucwords(str_replace('_', ' ', $label));
+    }
+    return $bundles;
+  }
+
   public function getHTMLTemplate($template){
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return 
     // the html string to we can parse and handle it
-    return $this->twig_service->loadTemplate($theme_path.'/components/'.$template.'/'.$template.'.html.twig')->render(array());
+    return $this->twig_service->loadTemplate($theme_path.'/forms/newsletter'.$template.'/'.$template.'.html.twig')->render(array());
   }
 
   public function createEntitiesFromTemplate($bundles) {
@@ -86,7 +101,23 @@ class FormBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->createFields($bundle_info);
+      $this->createFormMode($form_type);
+      dpm($form_type);
     }
+  }
+
+  public function createFormMode($form_type) {
+      $form_mode = EntityFormMode::create(array(
+        'id' => 'contact_messsage.email_form',
+        'label' => 'Email Form',
+        'targetEntityType' => 'contact_message',
+      ));
+    $form_mode->save();
+    dpm($form_mode);
+//    $entity_type_id = 'contact_message';
+//    dpm($this);
+//    $form_modes = EntityDisplayRepositoryInterface::getAllFormModes();
+//    dpm($form_modes);
   }
 
   public function createField($bundle, $field) {
