@@ -167,15 +167,17 @@ class ClutchCli {
                 $html_filename = basename($file);
                 $html_filename = str_replace('.html', '', $html_filename);
                 $theme_components = $themeDir."/".$bundle."/";
+                $yamls = $themeDir."/";
                 // var_dump($bundle_names);
                 if (!file_exists($theme_components)) {
                 mkdir($theme_components, 0777, true);
                 }
-                $page = $theme_components.$bundle.'.yml';
+                $page = $yamls.$bundle.'.yml';
                   if(0 < count($bundle_names)){
                     $pageBundle = $bundle_file_name . ":\r\n  ";
                     $pageBundle .= $bundle.':' . "\r\n      ";
                     for ($j = 1; $j < count($bundle_names); $j++) {
+                      $bundle_names[$j] = str_replace('-', '_', $bundle_names[$j]);
                     $pageBundle .= '- ' . $bundle_names[$j] . '' . "\r\n      ";
                     }
                     $pageBundle .= '' . "\r\n";

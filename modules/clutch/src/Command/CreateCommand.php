@@ -97,10 +97,10 @@ class CreateCommand extends Command {
       $create = new ClutchCli;
       
       $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-bundle','components');
       $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
       $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
       $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
+      $create->Components($themeDir,$theme,$htmlfiles,'data-menu','menus');
       $create->Directory($Root,$themeDir,$theme,$bundlezip);
       $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
       $create->ThemeTemplates($themeDir,$theme, $vars);
