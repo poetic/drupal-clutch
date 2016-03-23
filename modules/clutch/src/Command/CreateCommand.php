@@ -17,6 +17,8 @@ use Drupal\Console\Style\DrupalStyle;
 use Drupal\clutch\ClutchCli;
 use ZipArchive;
 
+use Drupal\clutch\MenuBuilder;
+
 /**
  * Class CreateCommand.
  *
@@ -93,15 +95,29 @@ class CreateCommand extends Command {
       $themeDir = "{$Root}/{$theme}";
 
       $create = new ClutchCli;
-      $create->Directory($Root,$themeDir,$theme,$bundlezip);
-      $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
-      $create->ThemeTemplates($themeDir,$theme, $vars);
+      
       $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
       $create->Components($themeDir,$theme,$htmlfiles,'data-bundle','components');
       $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
       $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
       $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
+      $create->Directory($Root,$themeDir,$theme,$bundlezip);
+      $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
+      $create->ThemeTemplates($themeDir,$theme, $vars);
+      
+
       $create->deleteDirectory('temp');
+
       $output->writeln('<info>You been Clutched!</info>');
+      \Drupal::service('theme_handler')->rebuildThemeData();
+      \Drupal::service('theme_handler')->reset();
+      \Drupal::service('theme_handler')->refreshInfo();
+      \Drupal::service('theme_handler')->listInfo();
+     // $this->getChain()->addCommand('cache:rebuild');
+      // $this->getChain()->addCommand('clutch:sync');
+      // $output->writeln('<comment>'.$theme.' is now installed and set as default.</comment>');  
+
     }
+
+    
 }

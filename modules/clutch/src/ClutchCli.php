@@ -105,12 +105,6 @@ class ClutchCli {
         }else{
           $this->recurse_copy($jsDir,$themejs);
         }
-        if(!$fontDir){
-          $output->writeln('<comment>Failed to find Fonts folder. make sure you are using the webflow zip</comment>');
-          return false;
-        }else{
-          $this->recurse_copy($fontDir,$themefont);
-        }
         if(!$imgDir){
           $output->writeln('<comment>Failed to find Images folder. make sure you are using the webflow zip</comment>');
           return false;
@@ -163,6 +157,7 @@ class ClutchCli {
                       foreach ($node as $childNode) {
                         $result .= $doc->saveHtml($childNode); //store the div block to result line by line;
                       }
+                    $bundle_names[$i] =  str_replace('_', '-', $bundle_names[$i]);
                     $temp = array($bundle_names[$i], $result);
                     array_push($extracted_info, $temp);
                   }
@@ -181,9 +176,9 @@ class ClutchCli {
                     $pageBundle = $bundle_file_name . ":\r\n  ";
                     $pageBundle .= $bundle.':' . "\r\n      ";
                     for ($j = 1; $j < count($bundle_names); $j++) {
-                    $pageBundle .= $bundle_names[$j] . '' . "\r\n      ";
+                    $pageBundle .= '- ' . $bundle_names[$j] . '' . "\r\n      ";
                     }
-                    $pageBundle .= '' . "\r\n\r\n";
+                    $pageBundle .= '' . "\r\n";
                   }
                 file_put_contents($page, $pageBundle, FILE_APPEND);
 
@@ -199,6 +194,4 @@ class ClutchCli {
                 }
             }
     }
-
- 
 }
