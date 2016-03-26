@@ -153,8 +153,11 @@ abstract class ClutchBuilder {
     $crawler->filter('img')->each(function (Crawler $node, $i) {
       if($node->filterXpath('//*[@data-field]')->count() == 0) {
         $temp_url = $node->getAttribute('src');
-        $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
-        $full_url = $public_folder . '/' . $temp_url;
+        // $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
+        $theme_array = $this->getCustomTheme();
+        $theme_name = array_keys($theme_array)[0];
+        $uri = drupal_get_path('theme', $theme_name);
+        $full_url = $uri . '/' . $temp_url;
         $node->setAttribute('src', $full_url);
       }
     });
@@ -228,7 +231,7 @@ abstract class ClutchBuilder {
    */
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->text($field['content']['value']);
+      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
     }
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
     return $crawler;
@@ -510,6 +513,8 @@ abstract class ClutchBuilder {
    */
   public function createDefaultContentForEntity($content, $type) {
     $entity = NULL;
+    $theme_array = $this->getCustomTheme();
+    $theme_name = array_keys($theme_array)[0];
     $file_directory = 'default';
     switch($type) {
       case 'component':
@@ -534,7 +539,7 @@ abstract class ClutchBuilder {
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
-        $uri = 'public://' . $field['value'];
+        $uri = drupal_get_path('theme', $theme_name) .'/'. $field['value'];
         if (file_exists($uri)) {
           $image = File::create();
           $image->setFileUri($uri);

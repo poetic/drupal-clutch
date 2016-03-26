@@ -13,6 +13,7 @@ use Drupal\Core\Url;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Drupal\clutch\ComponentBuilder;
+use Wa72\HtmlPageDom\HtmlPageCrawler;
 
 /**
  * Prepares variables for Custom page templates.
@@ -29,12 +30,19 @@ function template_preprocess_custom_page(array &$variables) {
   $components = $custom_page->get('associated_components')->getValue();
   foreach($components as $component) {
     $entity = entity_load('component', $component['target_id']);
+    $entity_title = $entity->getName();
     if($entity->bundle() == 'component_view_reference') {
       $view_reference = $entity->get('field_component_view')->getValue();
+      $views_markup = '';
       foreach($view_reference as $view) {
         $view_render = views_embed_view($view['target_id']);
-        $variables['contents'][] = drupal_render($view_render);  
+        $view_markup = drupal_render($view_render);
+        $views_markup = $views_markup . $view_markup->__toString();
       }
+      $component_builder = new ComponentBuilder();
+      $view_wrapper = $component_builder->getHTMLTemplate(str_replace(' ', '-', strtolower($entity_title)));
+      $crawler = new HtmlPageCrawler($view_wrapper);
+      $variables['contents'][] = $crawler->children()->append($views_markup);
     }elseif($entity->bundle() == 'component_form_reference') {
       $form_reference = $entity->get('field_form_reference')->getValue();
       $form_id = array_pop($form_reference)['target_id'];
