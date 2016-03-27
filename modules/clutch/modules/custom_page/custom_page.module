@@ -77,3 +77,9 @@ function custom_page_install() {
     ))
     ->save();
 }
+
+function custom_page_preprocess_page(&$variables) {
+  if ($custom_page = \Drupal::routeMatch()->getParameter('custom_page')) {
+    $variables['custom_page'] = $custom_page;
+  }
+}

@@ -157,7 +157,7 @@ abstract class ClutchBuilder {
         $theme_array = $this->getCustomTheme();
         $theme_name = array_keys($theme_array)[0];
         $uri = drupal_get_path('theme', $theme_name);
-        $full_url = $uri . '/' . $temp_url;
+        $full_url = '/' . $uri . '/' . $temp_url;
         $node->setAttribute('src', $full_url);
       }
     });
