@@ -42,38 +42,43 @@ function custom_page_theme() {
  * Implements hook_install().
  */
 function custom_page_install() {
-  $field_storage = FieldStorageConfig::create([
-    'field_name' => 'associated_components',
-    'entity_type' => 'custom_page',
-    'type' => 'entity_reference',
-    'cardinality' => -1,
-    'custom_storage' => FALSE,
-    'settings' => array(
-      'target_type' => 'component'
-    ),
-  ]);
 
-  $field_storage->save();
+  $components = array('header_components', 'content_components', 'footer_components');
 
-  $field_instance = FieldConfig::create([
-    'field_storage' => $field_storage,
-    'bundle' => 'custom_page',
-    'label' => 'Associated Components',
-  ]);
+  foreach($components as $component){
+    $field_storage = FieldStorageConfig::create([
+      'field_name' => $component,
+      'entity_type' => 'custom_page',
+      'type' => 'entity_reference',
+      'cardinality' => -1,
+      'custom_storage' => FALSE,
+      'settings' => array(
+        'target_type' => 'component'
+      ),
+    ]);
 
-  $field_instance->save();
+    $field_storage->save();
 
-  // entity_get_form_display('custom_page', 'custom_page', 'default')
-  //   ->setComponent('associated_components', array(
-  //     'type' => 'entity_reference_autocomplete',
-  //   ))
-  //   ->save();
+    $field_instance = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => 'custom_page',
+      'label' => ucwords(str_replace('_', ' ', $component)),
+    ]);
 
-  // Assign display settings for 'default' view mode.
-  entity_get_display('custom_page', 'custom_page', 'default')
-    ->setComponent('associated_components', array(
-      'label' => 'hidden',
-      'type' => 'entity_reference_entity_view',
+    $field_instance->save();
+
+    // entity_get_form_display('custom_page', 'custom_page', 'default')
+    //   ->setComponent('associated_components', array(
+    //     'type' => 'entity_reference_autocomplete',
+    //   ))
+    //   ->save();
+
+    // Assign display settings for 'default' view mode.
+    entity_get_display('custom_page', 'custom_page', 'default')
+      ->setComponent($component, array(
+        'label' => 'hidden',
+        'type' => 'entity_reference_entity_view',
     ))
     ->save();
+  }
 }
