@@ -10,6 +10,7 @@
 use Drupal\Core\Render\Element;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\clutch\ComponentBuilder;
 
 /**
  * Prepares variables for Component templates.
@@ -25,10 +26,24 @@ function template_preprocess_component(array &$variables) {
   // Fetch Component Entity Object.
   $component = $variables['elements']['#component'];
 
-  // Helpful $content variable for templates.
-  foreach (Element::children($variables['elements']) as $key) {
-    $variables['content'][$key] = $variables['elements'][$key];
-  }
+  $build_contextual_links['#contextual_links']['component'] = array(
+    'route_parameters' =>array('component' => $component->id()),
+    'metadata' => array('changed' => $component->getChangedTime()),
+  );
+
+  $markup = component_render_standard_component($component);
+  $variables['content']['#markup'] = $markup;
+}
+
+/**
+ * Return markup for standard component (not view/form reference)
+ */
+function component_render_standard_component($component) {
+  $component_type = $component->bundle();
+  $template_name = str_replace('_', '-', $component_type);
+  $clutch_builder = new ComponentBuilder();
+  $html = $clutch_builder->findAndReplace($template_name, $component);
+  return $html;
 }
 
 /**

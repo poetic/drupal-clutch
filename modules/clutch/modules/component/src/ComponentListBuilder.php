@@ -38,7 +38,7 @@ class ComponentListBuilder extends EntityListBuilder {
     $row['name'] = $this->l(
       $entity->label(),
       new Url(
-        'entity.component.edit_form', array(
+        'entity.component.canonical', array(
           'component' => $entity->id(),
         )
       )

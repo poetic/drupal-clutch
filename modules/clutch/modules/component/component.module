@@ -28,28 +28,11 @@ function component_help($route_name, RouteMatchInterface $route_match) {
  */
 function component_theme() {
   $theme = [];
-  // get current theme name
-  $current_theme = \Drupal::service('theme.manager')->getActiveTheme()->getName();
-  // retrieve component types
-  $component_types = \Drupal::entityQuery('component_type')->execute();
-  foreach($component_types as $component_type) {
-    $component = str_replace('_', '-', $component_type);
-    // component directory
-    $component_dir = drupal_get_path('theme', $current_theme) . '/components/' . $component; 
-    if(file_prepare_directory($component_dir)) {
-      $theme[$component_type] = [
-        'render element' => 'elements',
-        'path' => $component_dir,
-        'template' => $component,
-      ];
-    }else {
-      $theme[$component_type] = [
-        'render element' => 'content',
-        'file' => 'component.page.inc',
-        'template' => 'component',
-      ];
-    } 
-  }
+  $theme['component'] = [
+    'render element' => 'elements',
+    'file' => 'component.page.inc',
+    'template' => 'component',
+  ];
 
   $theme['component_content_add_list'] = [
     'render element' => 'content',
@@ -57,4 +40,10 @@ function component_theme() {
     'file' => 'component.page.inc',
   ];
   return $theme;
+}
+
+function component_preprocess_page(&$variables) {
+  if ($component = \Drupal::routeMatch()->getParameter('component')) {
+    $variables['component'] = $component;
+  }
 }

@@ -64,7 +64,7 @@ function clutch_install() {
     $field_instance = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => 'component_' . $type,
-      'label' => strtoupper($type) . ' Reference',
+      'label' => $label . ' Reference',
     ]);
 
     $field_instance->save();
