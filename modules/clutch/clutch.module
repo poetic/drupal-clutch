@@ -34,13 +34,17 @@ function clutch_install() {
   // get handler_settings for field associated_components
   $handler_settings = $field_associated_components->getSetting('handler_settings');
 
-  $component_reference_types = array('block', 'view', 'contact_form');
+  $component_reference_types = array(
+    'block' => 'Block',
+    'view' => 'View',
+    'contact_form' => 'Contact Form'
+  );
 
-  foreach($component_reference_types as $type) {
+  foreach($component_reference_types as $type => $label) {
     $bundle_id = 'component_' . $type;
     $bundle = entity_create('component_type', array(
       'id' => $bundle_id,
-      'label' => 'Component '. strtoupper($type),
+      'label' => 'Component '. $label,
       'revision' => FALSE,
     ));
     $bundle->save();
