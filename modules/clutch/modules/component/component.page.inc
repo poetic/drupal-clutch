@@ -31,8 +31,29 @@ function template_preprocess_component(array &$variables) {
     'metadata' => array('changed' => $component->getChangedTime()),
   );
 
-  $markup = component_render_standard_component($component);
-  $variables['content']['#markup'] = $markup;
+  switch($component->bundle()) {
+    case 'component_view':
+
+      $markup = component_render_view_reference_component($component);
+      $variables['content']['#markup'] = $markup;
+
+      break;
+
+    case 'component_form':
+    
+      break;
+
+    case 'component_block':
+    
+      break;
+
+    default:
+
+      $markup = component_render_standard_component($component);
+      $variables['content']['#markup'] = $markup;
+
+      break;
+  }
 }
 
 /**
@@ -44,6 +65,20 @@ function component_render_standard_component($component) {
   $clutch_builder = new ComponentBuilder();
   $html = $clutch_builder->findAndReplace($template_name, $component);
   return $html;
+}
+
+/**
+ * Return markup for view component
+ */
+function component_render_view_reference_component($component) {
+  $view_reference_ids_array = $component->get('view_reference')->getValue();
+  $views_markup = '';
+  foreach($view_reference_ids_array as $view_refence) {
+    $view_render_array = views_embed_view($view_refence['target_id']);
+    $view_markup_object = drupal_render($view_render_array);
+    $views_markup = $views_markup . $view_markup_object->__toString();
+  }
+  return $views_markup;
 }
 
 /**
