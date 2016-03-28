@@ -13,6 +13,8 @@ dependencies:
   - coffee
   - color
   - config
+  - contact
+  - contact_storage
   - contextual
   - ctools
   - datetime

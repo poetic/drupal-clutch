@@ -4,4 +4,6 @@ description: Poetic Systems awesome website conversion module.
 core: 8.x
 package: Clutch
 dependencies:
+  - contact
   - custom_page
+  - views

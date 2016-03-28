@@ -29,21 +29,48 @@ function clutch_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_install().
  */
 function clutch_install() {
-  // create a bundle called component_view_reference. we need to use this
-  // bundle to create a reference to view and attach to page like a regular
-  // component.
-  $bundle = entity_create('component_type', array(
-    'id' => 'component_view_reference',
-    'label' => 'Component View Reference',
-    'revision' => FALSE,
-  ));
-  $bundle->save();
-  // TODO: need to automate creating field and attach to
-  // component_view_reference
-  // attach component_view_reference to associated_components field.
+
   $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
+  // get handler_settings for field associated_components
   $handler_settings = $field_associated_components->getSetting('handler_settings');
-  $handler_settings['target_bundles']['component_view_reference'] = 'component_view_reference';
+
+  $component_reference_types = array(
+    'block' => 'Block',
+    'view' => 'View',
+    'contact_form' => 'Contact Form'
+  );
+
+  foreach($component_reference_types as $type => $label) {
+    $bundle_id = 'component_' . $type;
+    $bundle = entity_create('component_type', array(
+      'id' => $bundle_id,
+      'label' => 'Component '. $label,
+      'revision' => FALSE,
+    ));
+    $bundle->save();
+
+    $field_storage = FieldStorageConfig::create([
+      'field_name' => $type . '_reference',
+      'entity_type' => 'component',
+      'type' => 'entity_reference',
+      'cardinality' => -1,
+      'custom_storage' => FALSE,
+      'settings' => array(
+        'target_type' => $type,
+       ),
+    ]);
+    $field_storage->save();
+
+    $field_instance = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => 'component_' . $type,
+      'label' => strtoupper($type) . ' Reference',
+    ]);
+
+    $field_instance->save();
+
+    $handler_settings['target_bundles'][$bundle_id] = $bundle_id;
+  } 
   $field_associated_components->setSetting('handler_settings', $handler_settings);
   $field_associated_components->save();
 }
