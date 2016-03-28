@@ -16,8 +16,10 @@ use Drupal\Console\Command\Command;
 use Drupal\Console\Style\DrupalStyle;
 use Drupal\clutch\ClutchCli;
 use ZipArchive;
-
+use Symfony\Component\Console\Helper\ProgressBar;
 use Drupal\clutch\MenuBuilder;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 /**
  * Class CreateCommand.
@@ -43,12 +45,6 @@ class CreateCommand extends Command {
                 '',
                 InputOption::VALUE_REQUIRED,
                 $this->trans('commands.generate.theme.options.machine-name')
-            )
-            ->addOption(
-                'theme-description',
-                '',
-                InputOption::VALUE_REQUIRED,
-                $this->trans('commands.generate.theme.options.module-path')
             );
   }
 
@@ -73,51 +69,61 @@ class CreateCommand extends Command {
         $theme = $helper->ask($input, $output, $question);
       }
       // Theme Description
-      $themeDesc = $input->getOption('theme-description');
-      if(!$themeDesc){
-        $helper = $this->getHelper('question');
-        $question = new Question('<info>Please enter theme description:</info> <comment>[These is a webflow theme]</comment> ', 'These is a webflow theme');
-        $themeDesc = $helper->ask($input, $output, $question);
-      }
+      // $themeDesc = $input->getOption('theme-description');
+      // if(!$themeDesc){
+      //   $helper = $this->getHelper('question');
+      //   $question = new Question('<info>Please enter theme description:</info> <comment>[These is a webflow theme]</comment> ', 'These is a webflow theme');
+      //   $themeDesc = $helper->ask($input, $output, $question);
+      // }
+      $path = getcwd().'/temp';
       $zip = new ZipArchive;
       if ($zip->open($withZip) === TRUE) {
-        $zip->extractTo('temp/');
+        $zip->extractTo($path);
         $zip->close();
         $output->writeln('<info>Starting Theme creation process</info>');
       } else {
         $output->writeln('<comment>Failed to open the archive!</comment>');
         return false;
       }
-      $directory = "temp/{$bundlezip}/";
+      $directory = "{$path}/{$bundlezip}/";
       $htmlfiles = glob($directory . "*.html");
       $themeMachine = strtolower(str_replace(" ","_",$theme));
       $Root = getcwd().'/themes';
       $themeDir = "{$Root}/{$theme}";
-
       $create = new ClutchCli;
-      
-      $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-menu','menus');
-      $create->Directory($Root,$themeDir,$theme,$bundlezip);
-      $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
-      $create->ThemeTemplates($themeDir,$theme, $vars);
-      
+      $output = new ConsoleOutput();
+      $output->setFormatter(new OutputFormatter(true));
+      $rows = 8;
+      $progressBar = new ProgressBar($output, $rows);
+      $progressBar->setBarCharacter('<fg=magenta>=</>');
+      $progressBar->setProgressCharacter("\xF0\x9F\x8F\x83");
 
-      $create->deleteDirectory('temp');
-
-      $output->writeln('<info>You been Clutched!</info>');
-      \Drupal::service('theme_handler')->rebuildThemeData();
-      \Drupal::service('theme_handler')->reset();
-      \Drupal::service('theme_handler')->refreshInfo();
-      \Drupal::service('theme_handler')->listInfo();
-     // $this->getChain()->addCommand('cache:rebuild');
-      // $this->getChain()->addCommand('clutch:sync');
-      // $output->writeln('<comment>'.$theme.' is now installed and set as default.</comment>');  
-
-    }
-
-    
+      for ($i = 0; $i<$rows; $i++) {
+        $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
+        $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
+        $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
+        $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
+        $create->Components($themeDir,$theme,$htmlfiles,'data-menu','menus');
+        $progressBar->advance();
+        $create->Directory($path,$Root,$themeDir,$theme,$bundlezip);
+        $progressBar->advance();
+        $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
+        $progressBar->advance();
+        $create->ThemeTemplates($themeDir,$theme, $vars);
+        $progressBar->advance();
+        $create->deleteDirectory($path);
+        $progressBar->advance();
+        \Drupal::service('theme_handler')->rebuildThemeData();
+        $progressBar->advance();
+        \Drupal::service('theme_handler')->reset();
+        $progressBar->advance();
+        // $output->writeln('<comment>'.$theme.' is now installed and set as default.</comment>');
+      }
+              \Drupal::service('theme_handler')->refreshInfo();
+        \Drupal::service('theme_handler')->listInfo();
+        $this->getChain()->addCommand('cache:rebuild', ['cache' => 'all']);
+        $this->getChain()->addCommand('clutch:sync', ['theme' => 'asd']);
+      $progressBar->finish();
+      $output->writeln('');
+  }
 }

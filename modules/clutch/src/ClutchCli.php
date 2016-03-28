@@ -74,11 +74,11 @@ class ClutchCli {
       }
   }
 
-  function Directory($Root,$themeDir,$theme,$bundlezip){
-        $cssDir = "temp/{$bundlezip}/css";
-        $jsDir = "temp/{$bundlezip}/js";
-        $fontDir = "temp/{$bundlezip}/fonts";
-        $imgDir = "temp/{$bundlezip}/images";
+  function Directory($path,$Root,$themeDir,$theme,$bundlezip){
+        $cssDir = "{$path}/{$bundlezip}/css";
+        $jsDir = "{$path}/{$bundlezip}/js";
+        $fontDir = "{$path}/{$bundlezip}/fonts";
+        $imgDir = "{$path}/{$bundlezip}/images";
         $themecss = "{$Root}/{$theme}/css";
         $themejs = "{$Root}/{$theme}/js";
         $themefont = "{$Root}/{$theme}/fonts";

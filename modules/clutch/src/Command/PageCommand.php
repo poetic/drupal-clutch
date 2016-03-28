@@ -34,23 +34,12 @@ class PageCommand extends Command {
             ->setName('clutch:sync')
             ->setDescription('This will generate your components folder')
             ->addOption(
-                'zip-file',
-                '',
-                InputOption::VALUE_REQUIRED,
-                $this->trans('commands.generate.theme.options.module')
-            )
-            ->addOption(
-                'theme-name',
+                'theme',
                 '',
                 InputOption::VALUE_REQUIRED,
                 $this->trans('commands.generate.theme.options.machine-name')
             )
-            ->addOption(
-                'theme-description',
-                '',
-                InputOption::VALUE_REQUIRED,
-                $this->trans('commands.generate.theme.options.module-path')
-            );
+            ;
   }
   /**
    * {@inheritdoc}
@@ -59,13 +48,13 @@ class PageCommand extends Command {
 
     $io = new DrupalStyle($input, $output);
 
-    $theme = $input->getOption('theme-name');
+    $theme = $input->getOption('theme');
       if(!$theme){
         $helper = $this->getHelper('question');
         $question = new Question('<info>Please enter theme name:</info> <comment>[webflow]</comment> ', 'webflow');
         $theme = $helper->ask($input, $output, $question);
       }
-     
+
         \Drupal::service('theme_handler')->refreshInfo();
 
         $themes  = \Drupal::service('theme_handler')->rebuildThemeData();
@@ -144,11 +133,13 @@ class PageCommand extends Command {
                         implode(',', $themesUnavailable)
                     )
                 );
-            } 
+            }
         }
+
+
       \Drupal::service('theme_installer')->install([$theme]);
       \Drupal::service('theme_handler')->setDefault($theme);
-
+// $this->getChain()->addCommand('theme:install', ['theme' => '']);
       $ClutchAPIForm = new ClutchAPIForm;
       $Root = getcwd().'/themes';
       $themeDir = "{$Root}/{$theme}";
