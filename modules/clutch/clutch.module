@@ -41,7 +41,7 @@ function clutch_install() {
   // TODO: need to automate creating field and attach to
   // component_view_reference
   // attach component_view_reference to associated_components field.
-  $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
+  $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'content_components');
   $handler_settings = $field_associated_components->getSetting('handler_settings');
   $handler_settings['target_bundles']['component_view_reference'] = 'component_view_reference';
   $field_associated_components->setSetting('handler_settings', $handler_settings);
