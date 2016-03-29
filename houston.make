@@ -31,9 +31,6 @@ projects[entity_reference_revisions][version] = "1.0-rc4"
 projects[iframe][subdir] = "contrib"
 projects[iframe][version] = "1.3"
 
-projects[linkit][subdir] = "contrib"
-projects[linkit][version] = "4.1"
-
 projects[metatag][subdir] = "contrib"
 projects[metatag][version] = "1.0-beta4"
 
