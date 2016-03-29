@@ -7,12 +7,18 @@ api = 2
 projects[admin_toolbar][subdir] = "contrib"
 projects[admin_toolbar][version] = "1.14"
 
+projects[coffee][subdir] = "contrib"
+projects[coffee][version] = "1.0-beta1"
+
+projects[contact_storage][subdir] = "contrib"
+projects[contact_storage][version] = "1.0-beta2"
+
 projects[composer_manager][subdir] = "contrib"
 projects[composer_manager][branch] = "1.x-dev"
 projects[composer_manager][revision] = "b5da8d1"
 
 projects[ctools][subdir] = "contrib"
-projects[ctools][version] = "3.x-dev"
+projects[ctools][version] = "3.0-alpha23"
 
 projects[devel][subdir] = "contrib"
 projects[devel][download][branch] = "1.x-dev"
@@ -21,6 +27,12 @@ projects[devel][download][type] = "git"
 
 projects[entity_reference_revisions][subdir] = "contrib"
 projects[entity_reference_revisions][version] = "1.0-rc4"
+
+projects[iframe][subdir] = "contrib"
+projects[iframe][version] = "1.3"
+
+projects[linkit][subdir] = "contrib"
+projects[linkit][version] = "4.1"
 
 projects[metatag][subdir] = "contrib"
 projects[metatag][version] = "1.0-beta4"
