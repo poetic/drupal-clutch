@@ -40,8 +40,9 @@ projects[pathauto][subdir] = "contrib"
 projects[pathauto][version] = "1.0-alpha1"
 
 projects[paragraphs][subdir] = "contrib"
-projects[paragraphs][version] = "1.0-rc4"
-projects[paragraphs][patch][0] = "https://www.drupal.org/files/issues/infoparserexception_in-2674736-7.patch"
+projects[paragraphs][download][branch] = "1.x"
+projects[paragraphs][download][revision] = "4adb7aa"
+projects[paragraphs][download][type] = "git"
 
 projects[s3fs][subdir] = "contrib"
 projects[s3fs][download][branch] = "2.x-dev"
