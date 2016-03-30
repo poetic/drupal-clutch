@@ -55,9 +55,3 @@ projects[special_menu_items][download][type] = "git"
 
 projects[token][subdir] = "contrib"
 projects[token][version] = "1.0-alpha2"
-
-projects[clutch][subdir] = "custom"
-projects[clutch][download][type] = git
-projects[clutch][download][url] = "https://github.com/poetic/clutch.git"
-projects[clutch][destination] = profile
-projects[clutch][directory_name] = clutch
