@@ -41,6 +41,7 @@ projects[pathauto][version] = "1.0-alpha1"
 
 projects[paragraphs][subdir] = "contrib"
 projects[paragraphs][version] = "1.0-rc4"
+projects[paragraphs][patch][0] = "https://www.drupal.org/files/issues/infoparserexception_in-2674736-7.patch"
 
 projects[s3fs][subdir] = "contrib"
 projects[s3fs][download][branch] = "2.x-dev"
