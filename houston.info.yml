@@ -4,49 +4,41 @@ description: 'An opinionated install profile focused on developer happiness.'
 core: 8.x
 
 dependencies:
-  - admin_toolbar
-  - admin_toolbar_tools
+  - node
+  - history
   - block
-  - block_content
   - breakpoint
   - ckeditor
-  - coffee
+  - color
   - config
-  - contact
-  - contact_storage
+  - comment
   - contextual
-  - ctools
+  - contact
+  - menu_link_content
   - datetime
-  - dblog
-  - editor
-  - entity_reference
-  - entity_reference_revisions
-  - field_ui
-  - file
-  - help
-  - history
-  - iframe
-  - image
-  - linkit
-  - menu
-  - metatag
-  - node
-  - options
-  - page_cache
-  - path
-  - pathauto
-  - paragraphs
+  - block_content
   - quickedit
-  - rdf
+  - editor
+  - help
+  - image
+  - menu_ui
+  - options
+  - path
+  - page_cache
+  - dynamic_page_cache
+  - taxonomy
+  - dblog
   - search
   - shortcut
-  - taxonomy
-  - telephone
-  - token
   - toolbar
-  - tour
+  - field_ui
+  - file
+  - rdf
   - views
   - views_ui
+  - tour
+  - automated_cron
+themes:
 themes:
   - classy
   - seven
