@@ -131,6 +131,11 @@ abstract class ClutchBuilder {
     // Find and replace title last
     if($entity->getEntityTypeId() == 'node') {
       $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
+      $date = $entity->get('created')->value;
+      $date = date('M d Y', $date);
+      if($crawler->filter('[data-date="date"]')->count()) {
+        $crawler->filter('[data-date="date"]')->text($date);
+      }
     }
     return $crawler;
   }
@@ -223,7 +228,7 @@ abstract class ClutchBuilder {
    */
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->text($field['content']['value'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->text($field['content']['value']);
     }
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
     return $crawler;
@@ -311,9 +316,8 @@ abstract class ClutchBuilder {
    */
   public function createEntityFromTemplate($template) {
     $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $crawler = new HtmlPageCrawler($template);
-    if($crawler->filterXPath('//*[@data-w-tab]')->count()) {
-      dpm('menu');
+    $crawler = new HtmlPageCrawler($this->getHTMLTemplate($template));
+    if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
 //    } else if ($crawler->filterXPath('//*[@form]')->count()) {
@@ -537,19 +541,22 @@ abstract class ClutchBuilder {
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
-        $image = File::create();
-        $image->setFileUri('public://' . $field['value']);
-        $image->setOwnerId(\Drupal::currentUser()->id());
-        $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
-        $image->setFileName(drupal_basename($field['value']));
-        $destination_dir = 'public://' . $file_directory;
-        file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
-        $destination = $destination_dir . '/' . basename($field['value']);
-        $file = file_move($image, $destination, FILE_CREATE_DIRECTORY);
-        $values = array(
-          'target_id' => $file->id(),
-        );
-        $entity->set($field['field_name'], $values);
+        $uri = 'public://' . $field['value'];
+        if (file_exists($uri)) {
+          $image = File::create();
+          $image->setFileUri($uri);
+          $image->setOwnerId(\Drupal::currentUser()->id());
+          $image->setMimeType('image/' . pathinfo($field['value'], PATHINFO_EXTENSION));
+          $image->setFileName(drupal_basename($field['value']));
+          $destination_dir = 'public://' . $file_directory;
+          file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
+          $destination = $destination_dir . '/' . basename($field['value']);
+          $file = file_copy($image, $destination);
+          $values = array(
+            'target_id' => $file->id(),
+          );
+          $entity->set($field['field_name'], $values);
+        }
       }else {
         $entity->set($field['field_name'], $field['value']);
       }

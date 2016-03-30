@@ -13,6 +13,8 @@ dependencies:
   - coffee
   - color
   - config
+  - contact
+  - contact_storage
   - contextual
   - ctools
   - datetime
@@ -49,6 +51,7 @@ dependencies:
   - tour
   - views
   - views_ui
+  - clutch
 themes:
   - classy
   - seven

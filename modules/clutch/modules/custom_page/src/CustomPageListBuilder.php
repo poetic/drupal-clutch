@@ -38,7 +38,7 @@ class CustomPageListBuilder extends EntityListBuilder {
     $row['name'] = $this->l(
       $entity->label(),
       new Url(
-        'entity.custom_page.edit_form', array(
+        'entity.custom_page.canonical', array(
           'custom_page' => $entity->id(),
         )
       )
