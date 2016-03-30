@@ -39,18 +39,21 @@ function template_preprocess_component(array &$variables) {
 
       break;
 
-    case 'component_form':
-    
+    case 'component_contact_form':
+      
+      $markup = \Drupal::service('entity.form_builder')->getForm(component_render_form_reference_component($component));
+      $variables['content'] = $markup;
+
       break;
 
     case 'component_block':
-    
+      
       break;
 
     default:
 
       $markup = component_render_standard_component($component);
-      $variables['content']['#markup'] = $markup;
+      $variables['content'] = $markup;
 
       break;
   }
@@ -79,6 +82,20 @@ function component_render_view_reference_component($component) {
     $views_markup = $views_markup . $view_markup_object->__toString();
   }
   return $views_markup;
+}
+
+/**
+ * Return markup for form component
+ */
+function component_render_form_reference_component($component) {
+  $form_reference = $component->get('contact_form_reference')->getValue();
+  $form_id = array_pop($form_reference)['target_id'];
+  $message = \Drupal::entityManager()
+    ->getStorage('contact_message')
+    ->create(array(
+      'contact_form' => $form_id,
+    ));
+  return $message;
 }
 
 /**
