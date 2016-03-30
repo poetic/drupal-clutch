@@ -21,6 +21,7 @@ use Drupal\contact\Entity\ContactForm;
 use Drupal\clutch\ExampleForm;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 
 /**
  * Class FormBuilder.
@@ -101,7 +102,25 @@ class FormBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->createFields($bundle_info);
-      $this->createFormMode($form_type);
+  //remove default visible form fields
+      entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->setComponent('copy-type', array(
+              'type' => 'hidden',
+          ))
+          ->save();
+
+      entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->setComponent('message-type', array(
+              'type' => 'hidden',
+          ))
+          ->save();
+
+      entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->setComponent('subject-type', array(
+              'type' => 'hidden',
+          ))
+          ->save();
+//      $this->createFormMode($form_type);
       dpm($form_type);
     }
   }
@@ -121,6 +140,7 @@ class FormBuilder extends ClutchBuilder{
   }
 
   public function createField($bundle, $field) {
+    dpm($field);
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
 //    $new_field = BaseFieldDefinition::create('string');
@@ -145,11 +165,12 @@ class FormBuilder extends ClutchBuilder{
     $field_instance->save();
 
     // // Assign widget settings for the 'default' form mode.
-  //     entity_get_form_display('node', $bundle, 'default')
-  //       ->setComponent($field['field_name'], array(
-  //         'type' => $field['field_form_display'],
-  //       ))
-  //       ->save();
+       entity_get_form_display('contact_message', $bundle, 'default')
+         ->setComponent($field['field_name'], array(
+           'type' => $field['field_form_display'],
+         ))
+         ->save();
+
   //
   //    // // Assign display settings for 'default' view mode.
   //     entity_get_display('node', $bundle, 'default')
@@ -164,7 +185,7 @@ class FormBuilder extends ClutchBuilder{
   //         '@bundle' => $bundle,
   //       ));
   }
-    public function prepareEntityInfoFromTemplate($template) {
+  public function prepareEntityInfoFromTemplate($template) {
     $html = $this->getHTMLTemplate($template);
     $crawler = new HtmlPageCrawler($html);
     $entity_info = array();
