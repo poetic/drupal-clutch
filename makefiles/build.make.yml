@@ -10,5 +10,5 @@ projects:
     subdir: ~
     download:
       url: https://github.com/poetic/clutch.git
-      branch: hosting/build
+      branch: hosting/no-s3
 
