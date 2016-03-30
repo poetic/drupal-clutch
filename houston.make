@@ -42,12 +42,6 @@ projects[pathauto][version] = "1.0-alpha1"
 projects[paragraphs][subdir] = "contrib"
 projects[paragraphs][version] = "1.0-rc4"
 
-projects[s3fs][subdir] = "contrib"
-projects[s3fs][download][branch] = "2.x-dev"
-projects[s3fs][download][revision] = "bc925ea"
-projects[s3fs][download][type] = "git"
-projects[s3fs][patch][0] = "https://www.drupal.org/files/issues/s3fs-use_drush_translation_function-2679887-4-8.0.0.patch"
-
 projects[special_menu_items][subdir] = "contrib"
 projects[special_menu_items][download][branch] = "1.x-dev"
 projects[special_menu_items][download][revision] = "ee6c072"
