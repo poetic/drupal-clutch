@@ -13,10 +13,6 @@ projects[coffee][version] = "1.0-beta1"
 projects[contact_storage][subdir] = "contrib"
 projects[contact_storage][version] = "1.0-beta2"
 
-projects[composer_manager][subdir] = "contrib"
-projects[composer_manager][branch] = "1.x-dev"
-projects[composer_manager][revision] = "b5da8d1"
-
 projects[ctools][subdir] = "contrib"
 projects[ctools][version] = "3.0-alpha23"
 

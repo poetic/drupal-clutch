@@ -9,6 +9,6 @@ projects:
     type: profile
     subdir: ~
     download:
-      url: https://github.com/RealLukeMartin/clutch.git
+      url: https://github.com/poetic/clutch.git
       branch: hosting/build
 
