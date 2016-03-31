@@ -64,12 +64,19 @@ function clutch_install() {
     $field_instance = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => 'component_' . $type,
-      'label' => strtoupper($type) . ' Reference',
+      'label' => $label . ' Reference',
     ]);
 
     $field_instance->save();
 
     $handler_settings['target_bundles'][$bundle_id] = $bundle_id;
+
+    // Assign widget settings for the 'default' form mode.
+    entity_get_form_display('component', $bundle_id, 'default')
+      ->setComponent($type . '_reference', array(
+        'type' => 'entity_reference_autocomplete',
+      ))
+      ->save();
   } 
   $field_associated_components->setSetting('handler_settings', $handler_settings);
   $field_associated_components->save();

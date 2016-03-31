@@ -63,12 +63,6 @@ function custom_page_install() {
 
   $field_instance->save();
 
-  // entity_get_form_display('custom_page', 'custom_page', 'default')
-  //   ->setComponent('associated_components', array(
-  //     'type' => 'entity_reference_autocomplete',
-  //   ))
-  //   ->save();
-
   // Assign display settings for 'default' view mode.
   entity_get_display('custom_page', 'custom_page', 'default')
     ->setComponent('associated_components', array(
@@ -76,4 +70,10 @@ function custom_page_install() {
       'type' => 'entity_reference_entity_view',
     ))
     ->save();
+}
+
+function custom_page_preprocess_page(&$variables) {
+  if ($custom_page = \Drupal::routeMatch()->getParameter('custom_page')) {
+    $variables['custom_page'] = $custom_page;
+  }
 }

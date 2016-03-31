@@ -16,7 +16,8 @@
  */
 #}
 <div{{ attributes.addClass('component') }}>
+	{{ contextual_links }}
   {% if content %}
-    {{- content -}}
+    {{ content|raw }}
   {% endif %}
 </div>
