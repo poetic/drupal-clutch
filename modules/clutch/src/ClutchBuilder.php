@@ -235,7 +235,7 @@ abstract class ClutchBuilder {
     $paragraph_template = $crawler->filter('.collection')->eq(0)->saveHTML();
     $crawler->filter('[data-field="'.$field_name.'"]')->setInnerHtml('');
     $index = 0;
-    foreach($field['value'] as $index => $fields_in_paragraph) {
+    foreach($field['value'] as $fields_in_paragraph) {
       $paragraph_children = new HtmlPageCrawler($paragraph_template);
       $paragraph_children_html = $this->setupWrapperForParagraph($paragraph_children, $fields_in_paragraph);
       $paragraph_children_html->addClass($index);
