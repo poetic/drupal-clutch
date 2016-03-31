@@ -56,7 +56,7 @@ class ComponentBuilder extends ClutchBuilder{
 
     $field_attribute = 'component/' . $component->id() . '/' . $field_name . '/' . $field_language . '/full';
     return [str_replace($bundle.'_', '', $field_name) => array(
-      'content' => $field_value[0],
+      'content' => !empty($field_value) ? $field_value[0] : NULL,
       'quickedit' => $field_attribute,
     )];
   }

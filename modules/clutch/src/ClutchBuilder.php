@@ -11,10 +11,6 @@ const QE_CLASS = 'quickedit-field';
 const QE_FIELD_ID = 'data-quickedit-field-id';
 const QE_ENTITY_ID = 'data-quickedit-entity-id';
 
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/Helpers.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
-
 use Drupal\component\Entity\Component;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\field\Entity\FieldStorageConfig;
