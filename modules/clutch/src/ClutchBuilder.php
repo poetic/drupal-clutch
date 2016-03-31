@@ -97,7 +97,7 @@ abstract class ClutchBuilder {
             break;
 
           case 'file':
-            if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
+            if($crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('href')) {
               $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
             }else {
               $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
@@ -180,7 +180,7 @@ abstract class ClutchBuilder {
       $media_query = $entity_background_component['settings']['css_settings']['bg_image_media_query'];
       $css_settings = $entity_background_component['settings']['css_settings'];
       $css = bg_image_add_background_image($image_url, $css_settings);
-      $crawler->append('<style type="text/css">' . $css . '</style>');
+      $crawler->append('<style type="text/css">@media '. $media_query . '{' . $css . '}</style>');
     }
     return $crawler;
     // better solution is import background image through header
