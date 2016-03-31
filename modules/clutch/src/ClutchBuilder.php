@@ -97,7 +97,11 @@ abstract class ClutchBuilder {
             break;
 
           case 'file':
-            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
+            if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
+              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
+            }else {
+              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+            }
             break;
 
           case 'iframe':
@@ -290,6 +294,12 @@ abstract class ClutchBuilder {
           // temporary remove quickedit for image
           $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
           // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        }elseif ($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'file'){
+          if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);  
+          }else {
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+          }
         }else {
           $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
         }
