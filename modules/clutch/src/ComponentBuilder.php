@@ -48,7 +48,7 @@ class ComponentBuilder extends ClutchBuilder{
     $field_language = $field_definition->language()->getId();
     $field_value = $component->get($field_name)->getValue();
     $field_type = $field_definition->getType();
-    if($field_type == 'image' && !empty($field_value)) {
+    if(($field_type == 'image' && !empty($field_value)) || ($field_type == 'file' && !empty($field_value))) {
       $file = File::load($field_value[0]['target_id']);
       $url = file_create_url($file->get('uri')->value);
       $field_value[0]['url'] = $url;
@@ -144,6 +144,12 @@ class ComponentBuilder extends ClutchBuilder{
       $handler_settings['target_bundles'][$paragraph_bundle] = $paragraph_bundle;
       $handler_settings['target_bundles_drag_drop'][$paragraph_bundle]['enabled'] = TRUE;
       $field_instance->setSetting('handler_settings', $handler_settings);
+      $field_instance->save();
+    }
+
+    if($field['field_type'] == 'file') {
+      $paragraph_bundle = str_replace($bundle . '_', '', $field['field_name']);
+      $handler_settings = $field_instance->setSetting('file_extensions', 'pdf doc docx txt');
       $field_instance->save();
     }
 

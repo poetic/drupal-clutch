@@ -86,6 +86,11 @@ abstract class ClutchBuilder {
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
+    
+    if($entity->hasField('field_background_image')) {
+      $crawler = $this->handleBackgroundImage($crawler, $entity);
+    }
+
     foreach($fields as $field_name => $field) {
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
@@ -95,8 +100,11 @@ abstract class ClutchBuilder {
             $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title']);
             break;
 
-          case 'iframe':
+          case 'file':
+            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
+            break;
 
+          case 'iframe':
             $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('width', $field['content']['width'])->setAttribute('height', $field['content']['height']);
             break;
 
@@ -156,6 +164,36 @@ abstract class ClutchBuilder {
       }
     }
     return $crawler;
+  }
+
+  public function handleBackgroundImage($crawler, $entity) {
+    $bundle = $entity->bundle();
+    $entity_type = $entity->getEntityTypeId();
+    $component_display =  entity_get_display($entity_type, $bundle, 'default');
+    $entity_background_component = $component_display->getComponent('field_background_image');
+    $image = $entity->get('field_background_image')->getValue();
+    if(!empty($image)) {
+      $image_id = $image[0]['target_id'];
+      $file = File::load($image_id);
+      $image_url = file_create_url($file->getFileUri());
+      // update media query usage later
+      $media_query = $entity_background_component['settings']['css_settings']['bg_image_media_query'];
+      $css_settings = $entity_background_component['settings']['css_settings'];
+      $css = bg_image_add_background_image($image_url, $css_settings);
+      $crawler->append('<style type="text/css">' . $css . '</style>');
+    }
+    return $crawler;
+    // better solution is import background image through header
+      // $elements = array();
+
+      // $elements = [[
+      //   '#tag' => 'style',
+      //   '#attributes' => [
+      //     'media' => $media_query
+      //   ],
+      //   '#value' => $css
+      // ], 'bg_image_formatter_css_' . $entity->id()];
+      // drupal_render($elements);
   }
 
   /**
@@ -251,12 +289,14 @@ abstract class ClutchBuilder {
    */
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'image') {
-        // temporary remove quickedit for image
-        $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
-        // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
-      }else {
-        $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+      if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->count()) {
+        if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'image') {
+          // temporary remove quickedit for image
+          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
+          // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        }else {
+          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        }
       }
     }
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
@@ -582,6 +622,8 @@ abstract class ClutchBuilder {
           );
           $entity->set($field['field_name'], $values);
         }
+      }elseif($field['field_type'] == 'file') {
+        // handle later. file in webflow is href. need an actual file to recognize and upload
       }else {
         $entity->set($field['field_name'], $field['value']);
       }
