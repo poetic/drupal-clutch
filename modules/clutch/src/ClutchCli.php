@@ -74,11 +74,11 @@ class ClutchCli {
       }
   }
 
-  function Directory($path,$Root,$themeDir,$theme,$bundlezip){
-        $cssDir = "{$path}/{$bundlezip}/css";
-        $jsDir = "{$path}/{$bundlezip}/js";
-        $fontDir = "{$path}/{$bundlezip}/fonts";
-        $imgDir = "{$path}/{$bundlezip}/images";
+  function Directory($Root,$themeDir,$theme,$bundlezip){
+        $cssDir = "temp/{$bundlezip}/css";
+        $jsDir = "temp/{$bundlezip}/js";
+        $fontDir = "temp/{$bundlezip}/fonts";
+        $imgDir = "temp/{$bundlezip}/images";
         $themecss = "{$Root}/{$theme}/css";
         $themejs = "{$Root}/{$theme}/js";
         $themefont = "{$Root}/{$theme}/fonts";
@@ -104,6 +104,12 @@ class ClutchCli {
           return false;
         }else{
           $this->recurse_copy($jsDir,$themejs);
+        }
+        if(!$fontDir){
+          $output->writeln('<comment>Failed to find Fonts folder. make sure you are using the webflow zip</comment>');
+          return false;
+        }else{
+          $this->recurse_copy($fontDir,$themefont);
         }
         if(!$imgDir){
           $output->writeln('<comment>Failed to find Images folder. make sure you are using the webflow zip</comment>');
@@ -157,7 +163,6 @@ class ClutchCli {
                       foreach ($node as $childNode) {
                         $result .= $doc->saveHtml($childNode); //store the div block to result line by line;
                       }
-                    $bundle_names[$i] =  str_replace('_', '-', $bundle_names[$i]);
                     $temp = array($bundle_names[$i], $result);
                     array_push($extracted_info, $temp);
                   }
@@ -167,20 +172,18 @@ class ClutchCli {
                 $html_filename = basename($file);
                 $html_filename = str_replace('.html', '', $html_filename);
                 $theme_components = $themeDir."/".$bundle."/";
-                $yamls = $themeDir."/";
                 // var_dump($bundle_names);
                 if (!file_exists($theme_components)) {
                 mkdir($theme_components, 0777, true);
                 }
-                $page = $yamls.$bundle.'.yml';
+                $page = $theme_components.$bundle.'.yml';
                   if(0 < count($bundle_names)){
                     $pageBundle = $bundle_file_name . ":\r\n  ";
                     $pageBundle .= $bundle.':' . "\r\n      ";
                     for ($j = 1; $j < count($bundle_names); $j++) {
-                      $bundle_names[$j] = str_replace('-', '_', $bundle_names[$j]);
-                    $pageBundle .= '- ' . $bundle_names[$j] . '' . "\r\n      ";
+                    $pageBundle .= $bundle_names[$j] . '' . "\r\n      ";
                     }
-                    $pageBundle .= '' . "\r\n";
+                    $pageBundle .= '' . "\r\n\r\n";
                   }
                 file_put_contents($page, $pageBundle, FILE_APPEND);
 
@@ -196,4 +199,6 @@ class ClutchCli {
                 }
             }
     }
+
+ 
 }

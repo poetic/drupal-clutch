@@ -26,7 +26,7 @@ class ComponentViewBuilder extends EntityViewBuilder {
         'route_parameters' =>array('component' => $entity->id()),
         'metadata' => array('changed' => $entity->getChangedTime()),
       );
-      $build['#theme'] = 'component';
+      $build['#theme'] = $entity->bundle();
     }
   }
 
