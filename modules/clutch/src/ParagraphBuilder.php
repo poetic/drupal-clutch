@@ -51,6 +51,7 @@ class ParagraphBuilder extends ClutchBuilder{
     return [str_replace($bundle.'_', '', $field_name) => array(
       'content' => $field_value[0],
       'quickedit' => $field_attribute,
+      'type' => $field_type,
     )];
   }
   

@@ -58,6 +58,7 @@ class ComponentBuilder extends ClutchBuilder{
     return [str_replace($bundle.'_', '', $field_name) => array(
       'content' => !empty($field_value) ? $field_value[0] : NULL,
       'quickedit' => $field_attribute,
+      'type' => $field_type,
     )];
   }
 

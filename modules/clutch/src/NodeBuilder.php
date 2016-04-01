@@ -15,7 +15,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
-use Drupal\clutch\clutchBuilder;
+use Drupal\clutch\ClutchBuilder;
 
 /**
  * Class NodeBuilder.
@@ -68,6 +68,7 @@ class NodeBuilder extends ClutchBuilder{
       return [str_replace($bundle.'_', '', $field_name) => array(
         'content' => $field_value[0],
         'quickedit' => $field_attribute,
+        'type' => $field_type,
       )];
     }
   }

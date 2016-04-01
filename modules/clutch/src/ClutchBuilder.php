@@ -82,12 +82,15 @@ abstract class ClutchBuilder {
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
-    
-    if($entity->hasField('field_background_image')) {
-      $crawler = $this->handleBackgroundImage($crawler, $entity);
-    }
+
+    // if($entity->hasField('field_background_image')) {
+    //   $crawler = $this->handleBackgroundImage($crawler, $entity);
+    // }
 
     foreach($fields as $field_name => $field) {
+      if($field['type'] == 'image') {
+        $crawler = $this->checkBackgroundImage($crawler, $entity, $field_name, $field);
+      }
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
         switch($field_type) {
@@ -166,19 +169,32 @@ abstract class ClutchBuilder {
     return $crawler;
   }
 
-  public function handleBackgroundImage($crawler, $entity) {
+  public function checkBackgroundImage($crawler, $entity, $field_name, $field) {
+    $bundle = $entity->bundle();
+    if(strpos($field_name, 'field') !== false) {
+      $type = $entity->getFieldDefinition($field_name)->getType();
+    }else {
+      $field_name = $bundle . '_' . $field_name;
+    }
+    $image = $entity->get($field_name)->getValue();
     $bundle = $entity->bundle();
     $entity_type = $entity->getEntityTypeId();
     $component_display =  entity_get_display($entity_type, $bundle, 'default');
-    $entity_background_component = $component_display->getComponent('field_background_image');
-    $image = $entity->get('field_background_image')->getValue();
+    $entity_component = $component_display->getComponent($field_name);
+    if($entity_component['type'] == 'bg_image_formatter') {
+      $crawler = $this->handleBackgroundImage($crawler, $entity_component, $image);
+    }
+    return $crawler;
+  }
+
+  public function handleBackgroundImage($crawler, $bg_display_component, $image) {
     if(!empty($image)) {
       $image_id = $image[0]['target_id'];
       $file = File::load($image_id);
       $image_url = file_create_url($file->getFileUri());
       // update media query usage later
-      $media_query = $entity_background_component['settings']['css_settings']['bg_image_media_query'];
-      $css_settings = $entity_background_component['settings']['css_settings'];
+      $media_query = $bg_display_component['settings']['css_settings']['bg_image_media_query'];
+      $css_settings = $bg_display_component['settings']['css_settings'];
       $css = bg_image_add_background_image($image_url, $css_settings);
       $crawler->append('<style type="text/css">@media '. $media_query . '{' . $css . '}</style>');
     }
