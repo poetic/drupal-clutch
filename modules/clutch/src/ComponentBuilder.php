@@ -30,7 +30,7 @@ class ComponentBuilder extends ClutchBuilder{
   /**
    *  {@inheritdoc}
    */
-  public function getHTMLTemplate($template){
+  public function  getHTMLTemplate($template){
     $theme_array = $this->getCustomTheme();
     $theme_path = array_values($theme_array)[0];
     // $template name has the same name of directory that holds the template
@@ -135,6 +135,8 @@ class ComponentBuilder extends ClutchBuilder{
       'bundle' => $bundle,
       'label' => str_replace('_', ' ', $field['field_name']),
     ]);
+    
+    
 
     $field_instance->save();
 

@@ -82,7 +82,6 @@ abstract class ClutchBuilder {
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
-
     // if($entity->hasField('field_background_image')) {
     //   $crawler = $this->handleBackgroundImage($crawler, $entity);
     // }
@@ -122,7 +121,7 @@ abstract class ClutchBuilder {
                   { "items": [{
                       "type": "image",
                       "url": "'. $field['content']['url'] .'"
-                    }] 
+                    }]
                   }
                 </script>');
             }
@@ -156,7 +155,7 @@ abstract class ClutchBuilder {
         $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
-    
+
     // Find and replace title last
     if($entity->getEntityTypeId() == 'node') {
       $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
@@ -188,6 +187,7 @@ abstract class ClutchBuilder {
   }
 
   public function handleBackgroundImage($crawler, $bg_display_component, $image) {
+
     if(!empty($image)) {
       $image_id = $image[0]['target_id'];
       $file = File::load($image_id);
@@ -261,7 +261,7 @@ abstract class ClutchBuilder {
         $index++;
       }
     }
-    
+
     $crawler->filter('.w-tab-pane')->each(function (Crawler $node, $i) {
       $node->setAttribute('data-w-tab', "Tab " . ($i+1));
       $node->addClass("tab-" . ($i+1));
@@ -412,8 +412,16 @@ abstract class ClutchBuilder {
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
+//    } else if ($crawler->filterXPath('//*[@form]')->count()) {
+    } else if ($template == 'contact-us') {
+      dpm('form');
+      $form_builder = new FormBuilder();
+      $form_builder->createBundle($bundle_info);
+      $this->createBundle($bundle_info);
+    } else {
+      dpm('component');
+      $this->createBundle($bundle_info);
     }
-    $this->createBundle($bundle_info);
   }
 
   /**
@@ -508,7 +516,7 @@ abstract class ClutchBuilder {
         case 'entity_reference_revisions':
           return $this->getFieldsInfoFromTemplateForParagraph($node, $field_name);
           break;
-        
+
         case 'iframe':
           $default_value['url'] = $node->extract(array('src'))[0];
           $default_value['width'] = $node->extract(array('width'))[0];
@@ -589,10 +597,10 @@ abstract class ClutchBuilder {
       }
     }
   }
-  
+
   /**
    * Create default content for entity
-   * 
+   *
    * @param $content, $type
    *  array of content information
    *  entity type

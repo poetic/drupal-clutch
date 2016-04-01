@@ -10,6 +10,7 @@ namespace Drupal\clutch\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\clutch\ComponentBuilder;
+use Drupal\clutch\FormBuilder;
 
 /**
  * Class clutchForm.
@@ -19,7 +20,7 @@ use Drupal\clutch\ComponentBuilder;
 class ClutchAPIForm extends FormBase {
 
   private $component_builder;
-
+  
   public function __construct() {
     $this->component_builder = new ComponentBuilder();
   }
@@ -221,4 +222,20 @@ class ClutchAPIForm extends FormBase {
   //   $this->component_builder->updateEntities($bundles);
   //   drupal_set_message('Update Entity');
   // }
+
+   public function createAllComponents($themeDir) {
+    $components_dir = $themeDir . '/components/';
+    if(!is_dir($components_dir)) {
+      return drupal_set_message('Your theme is missing the components directory. Please update and try again!');
+    }
+    $components_dir = scandir($themeDir . '/components/');
+    $bundles = array();
+
+    foreach ($components_dir as $dir) {
+      if (strpos($dir, '.') !== 0) {
+        $bundles[str_replace('-', '_', $dir)] = ucwords($dir);
+      }
+    }
+    $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+  }
 }
