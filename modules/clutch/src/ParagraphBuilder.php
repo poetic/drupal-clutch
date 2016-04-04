@@ -40,7 +40,7 @@ class ParagraphBuilder extends ClutchBuilder{
     $field_language = $field_definition->language()->getId();
     $field_value = $paragraph->get($field_name)->getValue();
     $field_type = $field_definition->getType();
-    if($field_type == 'image' || $field_type == 'file') {
+    if(($field_type == 'image' && !empty($field_value)) || ($field_type == 'file' && !empty($field_value))) {
       $file = File::load($field_value[0]['target_id']);
       $url = file_create_url($file->get('uri')->value);
       $field_value[0]['url'] = $url;
