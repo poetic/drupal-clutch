@@ -15,7 +15,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
-use Drupal\clutch\clutchBuilder;
+use Drupal\clutch\ClutchBuilder;
 
 /**
  * Class NodeBuilder.
@@ -40,27 +40,37 @@ class NodeBuilder extends ClutchBuilder{
     if(file_exists($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')) {
       return $this->twig_service->loadTemplate($theme_path.'/nodes/'.$template.'/'.$template.'-'.$view_mode.'.html.twig')->render(array());
     }else {
-       return FALSE;
+      return FALSE;
     }
   }
 
   public function collectFieldValues($node, $field_definition) {
     $bundle = $node->bundle();
-    $field_name = $field_definition->getName();
-    $field_language = $field_definition->language()->getId();
-    $field_value = $node->get($field_name)->getValue();
     $field_type = $field_definition->getType();
-    if($field_type == 'image' && isset($field_value)) {
-      $file = File::load($field_value[0]['target_id']);
-      $url = file_create_url($file->get('uri')->value);
-      $field_value[0]['url'] = $url;
+    if($field_type == 'entity_reference') {
+      $field_name = $field_definition->getName();
+      $handler = $field_definition->getSetting('handler');
+      $field_value = $node->get($field_name)->getValue();
+      return [str_replace($bundle.'_', '', $field_name) => array(
+        'handler' => $handler,
+        'target_id' => $field_value[0]['target_id'],
+      )];
+    }else {
+      $field_name = $field_definition->getName();
+      $field_language = $field_definition->language()->getId();
+      $field_value = $node->get($field_name)->getValue();
+      if($field_type == 'image' && !empty($field_value)) {
+        $file = File::load($field_value[0]['target_id']);
+        $url = file_create_url($file->get('uri')->value);
+        $field_value[0]['url'] = $url;
+      }
+      $field_attribute = 'node/' . $node->id() . '/' . $field_name . '/' . $field_language . '/full';  
+      return [str_replace($bundle.'_', '', $field_name) => array(
+        'content' => $field_value[0],
+        'quickedit' => $field_attribute,
+        'type' => $field_type,
+      )];
     }
-
-    $field_attribute = 'node/' . $node->id() . '/' . $field_name . '/' . $field_language . '/full';
-    return [str_replace($bundle.'_', '', $field_name) => array(
-      'content' => $field_value[0],
-      'quickedit' => $field_attribute,
-    )];
   }
 
   public function createBundle($bundle_info) {
@@ -90,24 +100,28 @@ class NodeBuilder extends ClutchBuilder{
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => $field['field_name'],
-      'entity_type' => 'node',
-      'type' => $field['field_type'],
-      'cardinality' => 1,
-      'custom_storage' => FALSE,
-    ]);
+    $field_storage = FieldStorageConfig::loadByName('node', $field['field_name']);
+    if(empty($field_storage)) {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field['field_name'],
+        'entity_type' => 'node',
+        'type' => $field['field_type'],
+        'cardinality' => 1,
+        'custom_storage' => FALSE,
+      ]);
+      $field_storage->save();
+    }
+    $field_instance = FieldConfig::loadByName('node', $bundle, $field['field_name']);
+    if (empty($field_instance)) {
+      // create field instance for bundle
+      $field_instance = FieldConfig::create([
+        'field_storage' => $field_storage,
+        'bundle' => $bundle,
+        'label' => str_replace('_', ' ', $field['field_name']),
+      ]);
 
-    $field_storage->save();
-
-    // create field instance for bundle
-    $field_instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => $bundle,
-      'label' => str_replace('_', ' ', $field['field_name']),
-    ]);
-
-    $field_instance->save();
+      $field_instance->save();
+    }
 
     // // Assign widget settings for the 'default' form mode.
      entity_get_form_display('node', $bundle, 'default')

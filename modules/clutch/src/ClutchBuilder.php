@@ -11,10 +11,6 @@ const QE_CLASS = 'quickedit-field';
 const QE_FIELD_ID = 'data-quickedit-field-id';
 const QE_ENTITY_ID = 'data-quickedit-entity-id';
 
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/Helpers.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
-
 use Drupal\component\Entity\Component;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -86,23 +82,39 @@ abstract class ClutchBuilder {
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
+
+    // if($entity->hasField('field_background_image')) {
+    //   $crawler = $this->handleBackgroundImage($crawler, $entity);
+    // }
+
     foreach($fields as $field_name => $field) {
+      if($field['type'] == 'image') {
+        $crawler = $this->checkBackgroundImage($crawler, $entity, $field_name, $field);
+      }
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
         $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
         switch($field_type) {
           case 'link':
+            $field['content']['uri'] = str_replace('internal:/', '', $field['content']['uri']);
             $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title']);
             break;
 
-          case 'iframe':
+          case 'file':
+            if($crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('href')) {
+              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
+            }else {
+              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+            }
+            break;
 
+          case 'iframe':
             $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('width', $field['content']['width'])->setAttribute('height', $field['content']['height']);
             break;
 
           case 'image':
             // remove quickedit for image
             // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url']);
-            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
             if($crawler->filter('.w-lightbox')->count()) {
               $crawler->filter('script')->remove();
               $crawler->filter('.w-lightbox')->append('
@@ -119,6 +131,23 @@ abstract class ClutchBuilder {
           case 'entity_reference_revisions':
             $crawler = $this->findAndReplaceValueForParagraph($field_name, $crawler, $field);
             $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit']);
+            break;
+
+          case 'entity_reference':
+            switch($field['handler']) {
+              case 'default:view':
+                $view_render_array = views_embed_view($field['target_id']);
+                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
+                break;
+
+              case 'default:block':
+                $block = \Drupal\block\Entity\Block::load($field['target_id']);
+                $block_content = \Drupal::entityManager()
+                  ->getViewBuilder('block')
+                  ->view($block);
+                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
+                break;
+            }
             break;
 
           default:
@@ -140,6 +169,49 @@ abstract class ClutchBuilder {
     return $crawler;
   }
 
+  public function checkBackgroundImage($crawler, $entity, $field_name, $field) {
+    $bundle = $entity->bundle();
+    if(strpos($field_name, 'field') !== false) {
+      $type = $entity->getFieldDefinition($field_name)->getType();
+    }else {
+      $field_name = $bundle . '_' . $field_name;
+    }
+    $image = $entity->get($field_name)->getValue();
+    $bundle = $entity->bundle();
+    $entity_type = $entity->getEntityTypeId();
+    $component_display =  entity_get_display($entity_type, $bundle, 'default');
+    $entity_component = $component_display->getComponent($field_name);
+    if($entity_component['type'] == 'bg_image_formatter') {
+      $crawler = $this->handleBackgroundImage($crawler, $entity_component, $image);
+    }
+    return $crawler;
+  }
+
+  public function handleBackgroundImage($crawler, $bg_display_component, $image) {
+    if(!empty($image)) {
+      $image_id = $image[0]['target_id'];
+      $file = File::load($image_id);
+      $image_url = file_create_url($file->getFileUri());
+      // update media query usage later
+      $media_query = $bg_display_component['settings']['css_settings']['bg_image_media_query'];
+      $css_settings = $bg_display_component['settings']['css_settings'];
+      $css = bg_image_add_background_image($image_url, $css_settings);
+      $crawler->append('<style type="text/css">@media '. $media_query . '{' . $css . '}</style>');
+    }
+    return $crawler;
+    // better solution is import background image through header
+      // $elements = array();
+
+      // $elements = [[
+      //   '#tag' => 'style',
+      //   '#attributes' => [
+      //     'media' => $media_query
+      //   ],
+      //   '#value' => $css
+      // ], 'bg_image_formatter_css_' . $entity->id()];
+      // drupal_render($elements);
+  }
+
   /**
    * Change image path before render
    *
@@ -153,8 +225,11 @@ abstract class ClutchBuilder {
     $crawler->filter('img')->each(function (Crawler $node, $i) {
       if($node->filterXpath('//*[@data-field]')->count() == 0) {
         $temp_url = $node->getAttribute('src');
-        $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
-        $full_url = $public_folder . '/' . $temp_url;
+        // $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
+        $theme_array = $this->getCustomTheme();
+        $theme_name = array_keys($theme_array)[0];
+        $uri = drupal_get_path('theme', $theme_name);
+        $full_url = '/' . $uri . '/' . $temp_url;
         $node->setAttribute('src', $full_url);
       }
     });
@@ -179,6 +254,7 @@ abstract class ClutchBuilder {
     foreach($field['value'] as $fields_in_paragraph) {
       $paragraph_children = new HtmlPageCrawler($paragraph_template);
       $paragraph_children_html = $this->setupWrapperForParagraph($paragraph_children, $fields_in_paragraph);
+      $paragraph_children_html->addClass($index);
       $crawler->filter('[data-field="'.$field_name.'"]')->append($paragraph_children_html);
       if($crawler->filterXpath('//*[@data-w-tab]')->count()) {
         $crawler->filter('.w-tab-link')->eq($index)->setInnerHtml($fields_in_paragraph['value']['tab_title']['content']['value']);
@@ -188,6 +264,7 @@ abstract class ClutchBuilder {
     
     $crawler->filter('.w-tab-pane')->each(function (Crawler $node, $i) {
       $node->setAttribute('data-w-tab', "Tab " . ($i+1));
+      $node->addClass("tab-" . ($i+1));
       return $node;
     });
 
@@ -228,7 +305,21 @@ abstract class ClutchBuilder {
    */
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
-      $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->text($field['content']['value']);
+      if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->count()) {
+        if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'image') {
+          // temporary remove quickedit for image
+          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
+          // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        }elseif ($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'file'){
+          if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);  
+          }else {
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+          }
+        }else {
+          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        }
+      }
     }
     $crawler->filter('.collection')->setAttribute('data-quickedit-entity-id', $fields['quickedit']);
     return $crawler;
@@ -256,6 +347,7 @@ abstract class ClutchBuilder {
         $field_values = $entity->get($field_name)->getValue();
         $field_language = $field_definition->language()->getId();
         foreach($field_values as $field_value) {
+
           $paragraph = entity_load('paragraph', $field_value['target_id']);
           $paragraph_builder = new ParagraphBuilder();
           $paragraph_fields['paragraph_'.$paragraph->id()]['value']= $paragraph_builder->collectFields($paragraph, $field_definition);
@@ -510,6 +602,8 @@ abstract class ClutchBuilder {
    */
   public function createDefaultContentForEntity($content, $type) {
     $entity = NULL;
+    $theme_array = $this->getCustomTheme();
+    $theme_name = array_keys($theme_array)[0];
     $file_directory = 'default';
     switch($type) {
       case 'component':
@@ -534,7 +628,7 @@ abstract class ClutchBuilder {
     foreach($content['fields'] as $field) {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
-        $uri = 'public://' . $field['value'];
+        $uri = drupal_get_path('theme', $theme_name) .'/'. $field['value'];
         if (file_exists($uri)) {
           $image = File::create();
           $image->setFileUri($uri);
@@ -550,6 +644,8 @@ abstract class ClutchBuilder {
           );
           $entity->set($field['field_name'], $values);
         }
+      }elseif($field['field_type'] == 'file') {
+        // handle later. file in webflow is href. need an actual file to recognize and upload
       }else {
         $entity->set($field['field_name'], $field['value']);
       }

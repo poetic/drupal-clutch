@@ -54,8 +54,8 @@ use Drupal\user\UserInterface;
  *   links = {
  *     "canonical" = "/component/{component}",
  *     "add-form" = "/admin/structure/component/add/{component_type}",
- *     "edit-form" = "/admin/structure/component/{component}/edit",
- *     "delete-form" = "/admin/structure/component/{component}/delete",
+ *     "edit-form" = "/component/{component}/edit",
+ *     "delete-form" = "/component/{component}/delete",
  *     "collection" = "/admin/structure/component",
  *   },
  *   bundle_entity_type = "component_type",
