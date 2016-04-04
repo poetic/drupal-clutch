@@ -88,7 +88,7 @@ abstract class ClutchBuilder {
     // }
 
     foreach($fields as $field_name => $field) {
-      if($field['type'] == 'image') {
+      if(isset($field['type']) && $field['type'] == 'image') {
         $crawler = $this->checkBackgroundImage($crawler, $entity, $field_name, $field);
       }
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
