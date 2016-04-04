@@ -25,6 +25,7 @@ use Drupal\clutch\ParagraphBuilder;
 use Drupal\clutch\TabBuilder;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\clutch\MenuBuilder;
+use Drupal\clutch\FormBuilder;
 
 /**
  * Class ClutchBuilder.
@@ -122,7 +123,7 @@ abstract class ClutchBuilder {
                   { "items": [{
                       "type": "image",
                       "url": "'. $field['content']['url'] .'"
-                    }] 
+                    }]
                   }
                 </script>');
             }
@@ -156,7 +157,7 @@ abstract class ClutchBuilder {
         $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
       }
     }
-    
+
     // Find and replace title last
     if($entity->getEntityTypeId() == 'node') {
       $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
@@ -261,7 +262,7 @@ abstract class ClutchBuilder {
         $index++;
       }
     }
-    
+
     $crawler->filter('.w-tab-pane')->each(function (Crawler $node, $i) {
       $node->setAttribute('data-w-tab', "Tab " . ($i+1));
       $node->addClass("tab-" . ($i+1));
@@ -312,7 +313,7 @@ abstract class ClutchBuilder {
           // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
         }elseif ($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'file'){
           if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
-            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);  
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
           }else {
             $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
           }
@@ -413,6 +414,10 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
+    if($crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " form-wrapper ")]')->count()) {
+      $form_builder = new FormBuilder;
+      $form_builder->createBundle($bundle_info);
+    }
     $this->createBundle($bundle_info);
   }
 
@@ -508,7 +513,7 @@ abstract class ClutchBuilder {
         case 'entity_reference_revisions':
           return $this->getFieldsInfoFromTemplateForParagraph($node, $field_name);
           break;
-        
+
         case 'iframe':
           $default_value['url'] = $node->extract(array('src'))[0];
           $default_value['width'] = $node->extract(array('width'))[0];
@@ -589,10 +594,10 @@ abstract class ClutchBuilder {
       }
     }
   }
-  
+
   /**
    * Create default content for entity
-   * 
+   *
    * @param $content, $type
    *  array of content information
    *  entity type
