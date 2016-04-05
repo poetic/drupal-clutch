@@ -7,6 +7,11 @@ api = 2
 projects[admin_toolbar][subdir] = "contrib"
 projects[admin_toolbar][version] = "1.14"
 
+projects[bg_image_formatter][subdir] = "contrib"
+projects[bg_image_formatter][version] = "1.x-dev"
+projects[bg_image_formatter][download][revision] = "9e15fa0"
+projects[bg_image_formatter][download][type] = "git"
+
 projects[coffee][subdir] = "contrib"
 projects[coffee][version] = "1.0-beta1"
 
@@ -27,6 +32,9 @@ projects[entity_reference_revisions][version] = "1.0-rc4"
 projects[iframe][subdir] = "contrib"
 projects[iframe][version] = "1.3"
 
+projects[imce][subdir] = "contrib"
+projects[imce][version] = "1.0"
+
 projects[linkit][subdir] = "contrib"
 projects[linkit][version] = "4.1"
 
@@ -36,19 +44,27 @@ projects[metatag][version] = "1.0-beta5"
 projects[migrate_plus][subdir] = "contrib"
 projects[migrate_plus][version] = "1.0-beta1"
 
-projects[pathauto][subdir] = "contrib"
-projects[pathauto][version] = "1.0-alpha1"
-
 projects[paragraphs][subdir] = "contrib"
 projects[paragraphs][download][branch] = "1.x"
 projects[paragraphs][download][revision] = "4adb7aa"
 projects[paragraphs][download][type] = "git"
+
+projects[pathauto][subdir] = "contrib"
+projects[pathauto][version] = "1.0-alpha1"
+
+projects[redirect][type] = module
+projects[redirect][download][type] = git
+projects[redirect][download][url] = https://github.com/md-systems/redirect.git
+projects[redirect][download][branch] = "8.x-1.x"
 
 projects[s3fs][subdir] = "contrib"
 projects[s3fs][download][branch] = "2.x-dev"
 projects[s3fs][download][revision] = "bc925ea"
 projects[s3fs][download][type] = "git"
 projects[s3fs][patch][0] = "https://www.drupal.org/files/issues/s3fs-use_drush_translation_function-2679887-4-8.0.0.patch"
+
+projects[simple_sitemap][subdir] = "contrib"
+projects[simple_sitemap][version] = "2.2"
 
 projects[special_menu_items][subdir] = "contrib"
 projects[special_menu_items][download][branch] = "1.x-dev"
