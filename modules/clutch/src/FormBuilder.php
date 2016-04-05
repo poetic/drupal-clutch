@@ -46,10 +46,10 @@ class FormBuilder extends ClutchBuilder{
   public function createBundle($bundle_info) {
     //TODO check if form already exists to reuse. always make new component type
     dpm($bundle_info);
-    // $this->createForm($bundle_info);
-    // $this->removeDefaultFormFields($bundle_info);
-    // dpm();
-    //$this->createFields($bundle_info);
+    $this->createForm($bundle_info);
+    $this->removeDefaultFormFields($bundle_info); //TODO hide all fields in form automatically before creating new ones
+    $this->createFields($bundle_info);
+    // $this->createFormEntityReference($bundle_info);
   }
 
   public function createForm($bundle_info) {
@@ -67,8 +67,24 @@ class FormBuilder extends ClutchBuilder{
     $this->createFields($bundle);
   }
 
-  public function createField($bundle, $field) {
-    return 1;
+  public function createField($id, $field) {
+      dpm('before create');
+      $field_storage = FieldStorageConfig::create([
+      'field_name' => $field['field_name'],
+      'entity_type' => 'contact_message',
+      'type' => $field['field_type'],
+      'cardinality' => 1,
+      'custom_storage' => FALSE,
+    ]);
+    $field_storage->save();
+    dpm('before field instance');
+    $field_instance = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => $id,
+      'label' => $field['field_name'],
+    ]);
+    $field_instance->save();     
+    dpm('field done');  
   }
 
   public function getBundle(Crawler $crawler) {
@@ -76,30 +92,53 @@ class FormBuilder extends ClutchBuilder{
     return $bundle;
   }
 
+  public function createFields($bundle) {
+    foreach($bundle['fields'] as $field) {
+      dpm($field);
+      $this->createField($bundle['id'], $field);
+      $this->displayFormField($bundle, $field);
+    }
+  }
+
   public function removeDefaultFormFields($bundle_info) {
-     entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('name')
           ->save();
 
- entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('email')
           ->save();
 
- entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('subject')
           ->save();
 
- entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('message')
           ->save();
 
- entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('copy')
           ->save();
 
- entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+    entity_get_form_display('contact_message', $bundle_info['id'], 'default')
           ->removeComponent('mail')
           ->save();
+  }
+
+  public function displayFormField($bundle,$field) {
+    dpm('form field before');
+     entity_get_form_display('contact_message', $bundle['id'], 'default')
+          ->setComponent($field['field_name'], array(
+              'type' => $field['field__form_display'],
+          ))
+          ->save();
+    dpm('form field after');
+  }
+
+  public function createFormEntityReference($bundle_info) {
+    $handler_settings = $field_associated_components->getSetting('handler_settings');
+    dpm($handler_settings);
   }
 
 }
