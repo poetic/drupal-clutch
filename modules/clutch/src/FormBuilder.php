@@ -45,8 +45,10 @@ class FormBuilder extends ClutchBuilder{
 
   public function createBundle($bundle_info) {
     //TODO check if form already exists to reuse. always make new component type
-    $form = $this->createForm($bundle_info);
-    dpm($form);
+    dpm($bundle_info);
+    // $this->createForm($bundle_info);
+    // $this->removeDefaultFormFields($bundle_info);
+    // dpm();
     //$this->createFields($bundle_info);
   }
 
@@ -56,11 +58,13 @@ class FormBuilder extends ClutchBuilder{
       'label' => ucwords(str_replace('_', ' ', $bundle_info['id'])),
       'type' => "contact_form",
     ))->save();
+    
     \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
     array(
       '@bundle' => $bundle_info,
       'form' => $form_type
     ));
+    $this->createFields($bundle);
   }
 
   public function createField($bundle, $field) {
@@ -68,7 +72,34 @@ class FormBuilder extends ClutchBuilder{
   }
 
   public function getBundle(Crawler $crawler) {
-       return 1;
+    $bundle = $crawler->getAttribute('data-component');
+    return $bundle;
+  }
+
+  public function removeDefaultFormFields($bundle_info) {
+     entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('name')
+          ->save();
+
+ entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('email')
+          ->save();
+
+ entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('subject')
+          ->save();
+
+ entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('message')
+          ->save();
+
+ entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('copy')
+          ->save();
+
+ entity_get_form_display('contact_message', $bundle_info['id'], 'default')
+          ->removeComponent('mail')
+          ->save();
   }
 
 }
