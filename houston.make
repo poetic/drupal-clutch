@@ -45,14 +45,13 @@ projects[migrate_plus][subdir] = "contrib"
 projects[migrate_plus][version] = "1.0-beta1"
 
 projects[paragraphs][subdir] = "contrib"
-projects[paragraphs][download][branch] = "1.x"
-projects[paragraphs][download][revision] = "4adb7aa"
-projects[paragraphs][download][type] = "git"
+projects[paragraphs][download][branch] = "1.0-rc4"
 
 projects[pathauto][subdir] = "contrib"
-projects[pathauto][version] = "1.0-alpha1"
+projects[pathauto][version] = "1.0-alpha2"
 
 projects[redirect][type] = module
+projects[redirect][subdir] = "contrib"
 projects[redirect][download][type] = git
 projects[redirect][download][url] = https://github.com/md-systems/redirect.git
 projects[redirect][download][branch] = "8.x-1.x"
