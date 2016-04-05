@@ -45,7 +45,7 @@ projects[migrate_plus][subdir] = "contrib"
 projects[migrate_plus][version] = "1.0-beta1"
 
 projects[paragraphs][subdir] = "contrib"
-projects[paragraphs][download][branch] = "1.0-rc4"
+projects[paragraphs][version] = "1.0-rc4"
 
 projects[pathauto][subdir] = "contrib"
 projects[pathauto][version] = "1.0-alpha2"
