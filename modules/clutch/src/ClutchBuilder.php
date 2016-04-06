@@ -414,9 +414,9 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
-    if($crawler->filterXPath('//*[contains(concat(" ", normalize-space(@class), " "), " form-wrapper ")]')->count()) {
-      $form_builder = new FormBuilder;
-      $form_builder->createBundle($bundle_info);
+    if($bundle_info['contains_form'] == TRUE) {
+      // $form_builder = new FormBuilder;
+      // $form_builder->createBundle($bundle_info['fields'][0]);
     }
     $this->createBundle($bundle_info);
   }
@@ -467,7 +467,8 @@ abstract class ClutchBuilder {
     $bundle = $this->getBundle($crawler);
     $entity_info['id'] = $bundle;
     $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
-    $entity_info['fields'] = $fields;
+    $entity_info['fields'] = $fields['fields'];
+    $entity_info['contains_form'] = $fields['contains_form'];
     return $entity_info;
   }
 
@@ -493,7 +494,9 @@ abstract class ClutchBuilder {
    *   An array of fields info.
    */
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
-    $fields = $crawler->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
+    $form_flag = FALSE;
+    $fields = $crawler->filterXPath('//*[@data-field][not(ancestor::form)]')->each(function (Crawler $node, $i) use ($bundle, &$form_flag) {
+      $form_fields = null;
       $field_type = $node->extract(array('data-type'))[0];
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
@@ -520,21 +523,42 @@ abstract class ClutchBuilder {
           $default_value['height'] = $node->extract(array('height'))[0];
           break;
 
+        case 'entity-reference': 
+          if($field_name == $bundle.'_form') {
+            $form_flag = TRUE;
+            $formDOM = new HtmlPageCrawler($node->getInnerHtml());
+            $form_fields = $formDOM->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
+                return array(
+                  'field_name' => $bundle . '_' . $node->extract(array('data-field'))[0],
+                  'field_type' => $node->extract(array('data-type'))[0],
+                  'field_form_display' => $node->extract(array('data-form-type'))[0],
+                  'field_formatter' => $node->extract(array('data-format-type'))[0],
+                  'value' => $node->getInnerHtml(),
+                );
+            });
+          }
+          //other cases: menu
+          break;
+
         default:
           $default_value = $node->getInnerHtml();
           break;
       }
 
       return array(
+        'id' => $bundle,
         'field_name' => $field_name,
         'field_type' => $field_type,
         'field_form_display' => $field_form_display,
         'field_formatter' => $field_formatter,
+        'fields' => $form_fields,
         'value' => $default_value,
       );
     });
-
-    return $fields;
+    return array(
+        'fields' => $fields,
+        'contains_form' => $form_flag,
+        );
   }
 
   function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {

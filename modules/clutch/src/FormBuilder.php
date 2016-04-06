@@ -49,22 +49,20 @@ class FormBuilder extends ClutchBuilder{
     $this->createForm($bundle_info);
     $this->removeDefaultFormFields($bundle_info); //TODO hide all fields in form automatically before creating new ones
     $this->createFields($bundle_info);
-    // $this->createFormEntityReference($bundle_info);
   }
 
-  public function createForm($bundle_info) {
+  public function createForm(&$bundle_info) {
     $form_type = ContactForm::create(array(
       'id' => $bundle_info['id'],
       'label' => ucwords(str_replace('_', ' ', $bundle_info['id'])),
       'type' => "contact_form",
     ))->save();
-    
+    dpm($form_type);
     \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
     array(
       '@bundle' => $bundle_info,
       'form' => $form_type
     ));
-    $this->createFields($bundle);
   }
 
   public function createField($id, $field) {
@@ -130,15 +128,10 @@ class FormBuilder extends ClutchBuilder{
     dpm('form field before');
      entity_get_form_display('contact_message', $bundle['id'], 'default')
           ->setComponent($field['field_name'], array(
-              'type' => $field['field__form_display'],
+              'type' => $field['field_form_display'],
           ))
           ->save();
     dpm('form field after');
-  }
-
-  public function createFormEntityReference($bundle_info) {
-    $handler_settings = $field_associated_components->getSetting('handler_settings');
-    dpm($handler_settings);
   }
 
 }

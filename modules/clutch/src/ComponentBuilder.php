@@ -87,7 +87,7 @@ class ComponentBuilder extends ClutchBuilder{
         array(
           '@bundle' => $bundle_label,
         ));
-      $this->updateAssociatedComponents($bundle_info['id']);
+      // $this->updateAssociatedComponents($bundle_info['id']);
       $this->createFields($bundle_info);
       $this->createDefaultContentForEntity($bundle_info, 'component');
     }
@@ -106,25 +106,69 @@ class ComponentBuilder extends ClutchBuilder{
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    if($field['field_type'] == 'entity_reference_revisions') {
-      $field_storage = FieldStorageConfig::create([
-        'field_name' => $field['field_name'],
-        'entity_type' => 'component',
-        'type' => $field['field_type'],
-        'cardinality' => -1,
-        'custom_storage' => FALSE,
-        'settings' => array(
-          'target_type' => 'paragraph'
-         ),
-      ]);
-    }else {
-      $field_storage = FieldStorageConfig::create([
-        'field_name' => $field['field_name'],
-        'entity_type' => 'component',
-        'type' => $field['field_type'],
-        'cardinality' => 1,
-        'custom_storage' => FALSE,
-      ]);
+    switch($field['field_type']) {
+      case 'entity_reference_revisions':
+        $field_storage = FieldStorageConfig::create([
+          'field_name' => $field['field_name'],
+          'entity_type' => 'component',
+          'type' => $field['field_type'],
+          'cardinality' => -1,
+          'custom_storage' => FALSE,
+          'settings' => array(
+            'target_type' => 'paragraph'
+           ),
+        ]);
+        break;
+
+      case 'entity-reference':
+        dpm('entity ref');
+        // $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
+        // dpm($field_associated_components);
+        // get handler_settings for field associated_components
+        // $handler_settings = $field_associated_components->getSetting('handler_settings');
+        $field_storage = FieldStorageConfig::create([
+          'field_name' => 'contact_form_reference',
+          'entity_type' => 'component',
+          'type' => 'entity_reference',
+          'cardinality' => -1,
+          'custom_storage' => FALSE,
+          'settings' => array(
+            'target_type' => 'contact_form',
+           ),
+        ]);
+        $field_storage->save();
+
+        $field_instance = FieldConfig::create([
+          'field_storage' => $field_storage,
+          'bundle' => 'component_contact_form',
+          'label' => 'Contact Form Reference',
+        ]);
+
+        $field_instance->save();
+
+        $handler_settings['target_bundles']['component_contact_form'] = $bundle_id;
+
+        // Assign widget settings for the 'default' form mode.
+        entity_get_form_display('component', 'component_contact_form', 'default')
+          ->setComponent('contact_form_reference', array(
+            'type' => 'entity_reference_autocomplete',
+          ))
+          ->save();
+
+          // $field_associated_components->setSetting('handler_settings', $handler_settings);
+          // $field_associated_components->save();
+        break;
+
+      default: 
+        dpm('default');
+        $field_storage = FieldStorageConfig::create([
+          'field_name' => $field['field_name'],
+          'entity_type' => 'component',
+          'type' => $field['field_type'],
+          'cardinality' => 1,
+          'custom_storage' => FALSE,
+        ]);
+        break;
     }
 
     $field_storage->save();
