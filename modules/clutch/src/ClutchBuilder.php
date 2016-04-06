@@ -414,6 +414,7 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
+    dpm($bundle_info);
     if($bundle_info['contains_form'] == TRUE) {
       // $form_builder = new FormBuilder;
       // $form_builder->createBundle($bundle_info['fields'][0]);

@@ -121,11 +121,7 @@ class ComponentBuilder extends ClutchBuilder{
         break;
 
       case 'entity-reference':
-        dpm('entity ref');
-        // $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
-        // dpm($field_associated_components);
-        // get handler_settings for field associated_components
-        // $handler_settings = $field_associated_components->getSetting('handler_settings');
+        dpm('entity ref top');
         $field_storage = FieldStorageConfig::create([
           'field_name' => 'contact_form_reference',
           'entity_type' => 'component',
@@ -140,23 +136,18 @@ class ComponentBuilder extends ClutchBuilder{
 
         $field_instance = FieldConfig::create([
           'field_storage' => $field_storage,
-          'bundle' => 'component_contact_form',
+          'bundle' => 'contact_us',
           'label' => 'Contact Form Reference',
         ]);
 
         $field_instance->save();
 
-        $handler_settings['target_bundles']['component_contact_form'] = $bundle_id;
-
         // Assign widget settings for the 'default' form mode.
-        entity_get_form_display('component', 'component_contact_form', 'default')
+        entity_get_form_display('component', 'contact_us', 'default')
           ->setComponent('contact_form_reference', array(
             'type' => 'entity_reference_autocomplete',
           ))
           ->save();
-
-          // $field_associated_components->setSetting('handler_settings', $handler_settings);
-          // $field_associated_components->save();
         break;
 
       default: 
@@ -174,13 +165,13 @@ class ComponentBuilder extends ClutchBuilder{
     $field_storage->save();
 
     // create field instance for bundle
-    $field_instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => $bundle,
-      'label' => str_replace('_', ' ', $field['field_name']),
-    ]);
+    // $field_instance = FieldConfig::create([
+    //   'field_storage' => $field_storage,
+    //   'bundle' => $bundle,
+    //   'label' => str_replace('_', ' ', $field['field_name']),
+    // ]);
 
-    $field_instance->save();
+    // $field_instance->save();
 
 
     if($field['field_type'] == 'entity_reference_revisions') {
