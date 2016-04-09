@@ -1,0 +1,31 @@
+uuid: feb7a9ae-41fd-4c9a-be09-87c91951fba9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.associated_component.component
+    - field.field.paragraph.associated_component.region
+    - paragraphs.paragraphs_type.associated_component
+id: paragraph.associated_component.default
+targetEntityType: paragraph
+bundle: associated_component
+mode: default
+content:
+  component:
+    type: entity_reference_autocomplete
+    weight: 1
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  region:
+    type: string_textfield
+    weight: 0
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  uid: true

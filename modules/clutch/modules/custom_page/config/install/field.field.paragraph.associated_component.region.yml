@@ -1,0 +1,19 @@
+uuid: 1a0a0008-1d9b-401a-a438-cf764e8d146b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.region
+    - paragraphs.paragraphs_type.associated_component
+id: paragraph.associated_component.region
+field_name: region
+entity_type: paragraph
+bundle: associated_component
+label: Region
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

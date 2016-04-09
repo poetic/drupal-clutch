@@ -1,0 +1,20 @@
+uuid: 91e82c56-6319-4450-9bb5-1365501d86da
+langcode: en
+status: true
+dependencies:
+  module:
+    - component
+    - paragraphs
+id: paragraph.component
+field_name: component
+entity_type: paragraph
+type: entity_reference
+settings:
+  target_type: component
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

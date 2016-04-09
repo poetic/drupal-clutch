@@ -1,0 +1,51 @@
+uuid: c7a066b0-e438-48b7-8a27-17429b7576e0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.custom_page.custom_page.associated_components
+  module:
+    - custom_page
+    - paragraphs
+    - path
+id: custom_page.custom_page.default
+targetEntityType: custom_page
+bundle: custom_page
+mode: default
+content:
+  associated_components:
+    type: entity_reference_paragraphs
+    weight: 0
+    settings:
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      add_mode: dropdown
+      form_display_mode: default
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 10
+    settings: {  }
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: -5
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 30
+    settings: {  }
+    third_party_settings: {  }
+  user_id:
+    type: entity_reference_autocomplete
+    weight: 5
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }

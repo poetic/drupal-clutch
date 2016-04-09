@@ -10,6 +10,8 @@
 use Drupal\Core\Render\Element;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\component\Entity\Component;
+use Drupal\paragraphs\Entity\Paragraph;
 
 /**
  * Prepares variables for Custom page templates.
@@ -23,11 +25,23 @@ use Drupal\Core\Url;
  */
 function template_preprocess_custom_page(array &$variables) {
   $custom_page = $variables['elements']['#custom_page'];
-  $components = $custom_page->get('associated_components')->getValue();
-  foreach($components as $component) {
+  $associated_components = $custom_page->get('associated_components')->getValue();
+  foreach($associated_components as $associated_component) {
+  	$component = get_associated_component_entity($associated_component);
     // drupal 8 render entity programmatically using EntityViewBuilder
     $view_builder = \Drupal::entityManager()->getViewBuilder('component');
-    $output = $view_builder->view(entity_load('component', $component['target_id']));
-    $variables['contents'][] = $output;
+    $output = $view_builder->view(entity_load('component', $component['component']));
+    $variables['contents'][$component['region']][] = $output;
   }
+}
+
+function get_associated_component_entity($associated_component) {
+	$associated_component_id = $associated_component['target_id'];
+	$associated_component_entity = Paragraph::load($associated_component_id);
+	$component_id = $associated_component_entity->get('component')->getValue()[0]['target_id'];
+	$component_region = $associated_component_entity->get('region')->value;
+	return array(
+		'component' => $component_id,
+		'region' => $component_region,
+	);
 }

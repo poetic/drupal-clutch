@@ -182,7 +182,7 @@ class ComponentBuilder extends ClutchBuilder{
     parent::createEntitiesFromTemplate($bundles);
     entity_get_form_display('custom_page', 'custom_page', 'default')
       ->setComponent('associated_components', array(
-        'type' => 'entity_reference_autocomplete',
+        'type' => 'entity_reference_paragraphs',
       ))
       ->save();
   }
@@ -220,12 +220,12 @@ class ComponentBuilder extends ClutchBuilder{
    *   TODO
    */
   public function updateAssociatedComponents($bundle) {
-    $field_associated_components = FieldConfig::loadByName('custom_page', 'custom_page', 'associated_components');
+    $field_associated_components = FieldConfig::loadByName('paragraph', 'associated_component', 'component');
     $handler_settings = $field_associated_components->getSetting('handler_settings');
     $handler_settings['target_bundles'][$bundle] = $bundle;
     $field_associated_components->setSetting('handler_settings', $handler_settings);
     $field_associated_components->save();
-    \Drupal::logger('clutch:workflow')->notice('Add new target bundle @bundle for associated components field on Custom Page.',
+    \Drupal::logger('clutch:workflow')->notice('Add new target bundle @bundle for component reference field on Paragraph Type Associated Component.',
       array(
         '@bundle' => $bundle,
       ));
@@ -269,7 +269,7 @@ class ComponentBuilder extends ClutchBuilder{
       entity_load('component_type', $bundle_value)->delete();
       entity_get_form_display('custom_page', 'custom_page', 'default')
         ->setComponent('associated_components', array(
-          'type' => 'entity_reference_autocomplete',
+          'type' => 'entity_reference_paragraphs',
         ))
         ->save();
     }

@@ -1,0 +1,29 @@
+uuid: dacdf355-0242-415c-a156-774823adf23d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.custom_page.associated_components
+  module:
+    - custom_page
+    - entity_reference_revisions
+id: custom_page.custom_page.associated_components
+field_name: associated_components
+entity_type: custom_page
+bundle: custom_page
+label: 'Associated Components'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      associated_component: associated_component
+    target_bundles_drag_drop:
+      associated_component:
+        enabled: true
+        weight: 2
+field_type: entity_reference_revisions
