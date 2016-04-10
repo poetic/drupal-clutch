@@ -212,13 +212,29 @@ class ClutchAPIForm extends FormBase {
     drupal_set_message('Delete Entity');
   }
 
-  // public function updateComponents(array &$form, FormStateInterface $form_state) {
-  //   $submission_values = $form_state->getValues();
-  //   $bundles = array_filter(array_values($submission_values['update-bundles']));
-  //   if(in_array('select_all', $bundles)){
-  //     array_pop($bundles);
-  //   }
-  //   $this->component_builder->updateEntities($bundles);
-  //   drupal_set_message('Update Entity');
-  // }
+  public function updateComponents(array &$form, FormStateInterface $form_state) {
+    $submission_values = $form_state->getValues();
+    $bundles = array_filter(array_values($submission_values['update-bundles']));
+    if(in_array('select_all', $bundles)){
+      array_pop($bundles);
+    }
+    $this->component_builder->updateEntities($bundles);
+    drupal_set_message('Update Entity');
+  }
+
+   public function createAllComponents($themeDir) {
+    $components_dir = $themeDir . '/components/';
+    if(!is_dir($components_dir)) {
+      return drupal_set_message('Your theme is missing the components directory. Please update and try again!');
+    }
+    $components_dir = scandir($themeDir . '/components/');
+    $bundles = array();
+
+    foreach ($components_dir as $dir) {
+      if (strpos($dir, '.') !== 0) {
+        $bundles[str_replace('-', '_', $dir)] = ucwords($dir);
+      }
+    }
+    $this->component_builder->createEntitiesFromTemplate($bundles, 'component');
+  }
 }
