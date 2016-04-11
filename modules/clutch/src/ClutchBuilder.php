@@ -481,8 +481,9 @@ abstract class ClutchBuilder {
    *   return entity object
    */
   public function createEntityFromTemplate($template) {
-    $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $crawler = new HtmlPageCrawler($this->getHTMLTemplate($template));
+    $entity_info = $this->prepareEntityInfoFromTemplate($template);
+    $crawler = $entity_info['crawler'];
+    $bundle_info = $entity_info['entity'];
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
@@ -537,7 +538,7 @@ abstract class ClutchBuilder {
     $entity_info['id'] = $bundle;
     $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
     $entity_info['fields'] = $fields;
-    return $entity_info;
+    return [ 'crawler' => $crawler, 'entity' => $entity_info];
   }
 
   /**
@@ -703,7 +704,7 @@ abstract class ClutchBuilder {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
         $uri = drupal_get_path('theme', $theme_name) .'/'. $field['value'];
-        if (file_exists($uri)) {
+        if (file_exists($uri) && !is_dir($uri)) {
           $image = File::create();
           $image->setFileUri($uri);
           $image->setOwnerId(\Drupal::currentUser()->id());
