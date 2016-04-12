@@ -7,10 +7,9 @@
 
 namespace Drupal\clutch;
 
-use Drupal\clutch\ClutchBuilder;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\DomCrawler\Crawler;
-
+use Drupal\paragraphs\Entity\Paragraph;
 
 /**
  * Class PageBuilder.
@@ -18,51 +17,77 @@ use Symfony\Component\DomCrawler\Crawler;
  * @package Drupal\clutch\Controller
  */
 
-class PageBuilder extends ClutchBuilder{
+class PageBuilder {
 
   /**
-   *  {@inheritdoc}
+   * Create pages
+   *
+   * @param $theme
+   *   theme name
+   *
+   * @return
+   *   TODO
    */
-
   public function createPages($theme){
     $page_infos = Yaml::parse(file_get_contents('themes/'.$theme.'/components.yml'));
-    foreach($page_infos as $key=>$page_info){
-      $page_components = $page_info['components'];
-      $array_nid = array();
-      foreach($page_components as $page_component){
-        $components = \Drupal::entityQuery('component')->condition('type',$page_component)->execute();
-        $components = str_replace('-', '_', $components);
-        $id = key($components);
-        $id = array_values($components)[0];
-        $id = array('target_id'=>$id);
-        array_push($array_nid, $id);
-      }
-      $page_name = ucwords(str_replace('-', ' ', $key));
-      $page = entity_create('custom_page', array(
-        'id' => [$page_name],
-        'name'=>[$page_name],
-        'associated_components'=>$array_nid,
-      ));
-      $page->save();
+    foreach($page_infos as $page_title => $page_info){
+      $this->createPage($page_title, $page_info);
     }
   }
-  public function collectFieldValues($entity, $field_definition) {
 
+  /**
+   * Create page
+   *
+   * @param $page_title, $components
+   *   page title
+   *   associated components
+   *
+   * @return
+   *   page entity
+   */
+  public function createPage($page_title, $components) {
+    $associated_component_ids = array();
+    foreach($components['components'] as $component) {
+      array_push($associated_component_ids, $this->createAssociatedComponent($component));
+    }
+    $page_name = ucwords(str_replace('-', ' ', $page_title));
+    $page = entity_create('custom_page', array(
+      'id' => $page_title,
+      'name' => $page_name,
+      'associated_components' => $associated_component_ids,
+    ));
+    $page->save();
   }
 
-  public function createBundle($bundle_info) {
+  /**
+   * Create associated components for page
+   *
+   * @param $component
+   *   component string with component type and region
+   *
+   * @return
+   *   array of target_id, target_revision_id of component to associate to page
+   */
+  public function createAssociatedComponent($component) {
+    $component_info_array = explode('|', $component);
+    $component_type = $component_info_array[0];
+    $component_position = $component_info_array[1];
+    $component_id = \Drupal::entityQuery('component')->condition('type',$component_type)->execute();
+    $paragraph = Paragraph::create([
+      'type' => 'associated_component',
+      'component' => [
+        'target_id' => key($component_id),
+      ],
+      'region' => [
+        'value' => $component_position,
+        'format' => 'string',
+      ],
+    ]);
 
-  }
-
-  public function createField($bundle, $field) {
-
-  }
-   public function getHTMLTemplate($template) {
-
-  }
-
-
-  public function getBundle(Crawler $crawler) {
-
+    $paragraph->save();
+    return [
+      'target_id' => $paragraph->id(),
+      'target_revision_id' => $paragraph->getRevisionId(),
+    ];
   }
 }
