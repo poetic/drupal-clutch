@@ -15,8 +15,6 @@
  * @ingroup themeable
  */
 #}
-<div{{ attributes.addClass('custom_page') }}>
-	{% for content in contents %}
-    {{ content|raw }}
-  {% endfor %}
-</div>
+{% for content in contents %}
+  {{ content|raw }}
+{% endfor %}

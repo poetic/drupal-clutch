@@ -15,9 +15,6 @@
  * @ingroup themeable
  */
 #}
-<div{{ attributes.addClass('component') }}>
-	{{ contextual_links }}
-  {% if content %}
-    {{ content|raw }}
-  {% endif %}
-</div>
+{% if content %}
+  {{ content|raw }}
+{% endif %}
