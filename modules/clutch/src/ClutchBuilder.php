@@ -29,6 +29,7 @@ use Drupal\clutch\ParagraphBuilder;
 use Drupal\clutch\TabBuilder;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\clutch\MenuBuilder;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Class ClutchBuilder.
@@ -63,146 +64,271 @@ abstract class ClutchBuilder {
    *   render html for entity
    */
   public function findAndReplace($template, $entity, $view_mode = NULL) {
-    // TODO: find and replace info.
     $html = $this->getHTMLTemplate($template, $view_mode);
     $crawler = new HtmlPageCrawler($html);
+
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $crawler = $this->findAndReplaceValueForMenuLinks($crawler);
     }
-    $html = $this->findAndReplaceValueForFields($crawler, $entity);
+    
+    // get entity view display for entity.
+    $entity_type_id = $entity->getEntityTypeId();
+    $bundle = $entity->bundle();
+    if(($entity_type_id == 'component') || ($entity_type_id == 'node' && $view_mode == 'full')) {
+      $view_mode = 'default';
+    }
+
+    $entity_display = \Drupal::entityManager()->getStorage('entity_view_display')->load($entity_type_id . '.' . $bundle . '.' . $view_mode);  
+
+    $html = $this->findAndReplaceValueForFields($crawler, $entity, $entity_display, $view_mode);
     return $html;
   }
 
   /**
-   * Find and replace values for entity
-   *
-   * @param $crawler, $entity
-   *   crawler instance of class Crawler - Symfony
-   *   entity object
+   * Replacing value for fields
+   * 
+   * @param $crawler, $entity, $entity_display, $view_mode
+   *   crawler object
+   *   entity
+   *   entity view display
+   *   view mode (use to decide adding quickedit)
    *
    * @return
-   *   crawler instance with update html
+   *   render crawler object/render markup
    */
-  public function findAndReplaceValueForFields($crawler, $entity) {
+  public function findAndReplaceValueForFields($crawler, $entity, $entity_display, $view_mode) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
+    $bundle = $entity->bundle();
 
-    // if($entity->hasField('field_background_image')) {
-    //   $crawler = $this->handleBackgroundImage($crawler, $entity);
-    // }
-
-    foreach($fields as $field_name => $field) {
-      if(isset($field['type']) && $field['type'] == 'image') {
-        $crawler = $this->checkBackgroundImage($crawler, $entity, $field_name, $field);
+    foreach($fields as $field_name => $field_value) {
+      if(!strpos($field_name, 'field') !== false) {
+        $field_display = $entity_display->getComponent($bundle . '_' . $field_name);
+      }else {
+        $field_display = $entity_display->getComponent($field_name);
       }
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
-        $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
-        switch($field_type) {
-          case 'link':
-            $field['content']['uri'] = str_replace('internal:/', '', $field['content']['uri']);
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setAttribute('href', $field['content']['uri'])->text($field['content']['title']);
-            break;
-
-          case 'file':
-            if($crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('href')) {
-              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);
-            }else {
-              $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
-            }
-            break;
-
-          case 'iframe':
-            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('width', $field['content']['width'])->setAttribute('height', $field['content']['height']);
-            break;
-
-          case 'image':
-            // remove quickedit for image
-            // $crawler->filter('[data-field="'.$field_name.'"]')->addClass('quickedit-field')->setAttribute('data-quickedit-field-id', $field['quickedit'])->setAttribute('src', $field['content']['url']);
-            $crawler->filter('[data-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
-            if($crawler->filter('.w-lightbox')->count()) {
-              $crawler->filter('script')->remove();
-              $crawler->filter('.w-lightbox')->append('
-                <script type="application/json" class="w-json">
-                  { "items": [{
-                      "type": "image",
-                      "url": "'. $field['content']['url'] .'"
-                    }] 
-                  }
-                </script>');
-            }
-            break;
-
-          case 'entity_reference_revisions':
-            $crawler = $this->findAndReplaceValueForParagraph($field_name, $crawler, $field);
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit']);
-            break;
-
-          case 'entity_reference':
-            switch($field['handler']) {
-              case 'default:view':
-                $view_render_array = views_embed_view($field['target_id']);
-                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
-                break;
-
-              case 'default:block':
-                $block = \Drupal\block\Entity\Block::load($field['target_id']);
-                $block_content = \Drupal::entityManager()
-                  ->getViewBuilder('block')
-                  ->view($block);
-                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
-                break;
-            }
-            break;
-
-          default:
-            $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->setInnerHtml($field['content']['value']);
-        }
-        $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+        $crawler = $this->findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field_value, $field_display, $view_mode);
       }
     }
-    
+
     // Find and replace title last
     if($entity->getEntityTypeId() == 'node') {
-      $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit'])->text($fields['title']['content']['value']);
-      $date = $entity->get('created')->value;
-      $date = date('M d Y', $date);
+      $crawler->filter('[data-title="title"]')->text($fields['title']['content']['value']);
+      if($view_mode == 'default') {
+        $crawler->filter('[data-title="title"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $fields['title']['quickedit']);
+        $crawler->filter('[data-title="title"]')->removeAttr('data-title');
+      }
       if($crawler->filter('[data-date="date"]')->count()) {
+        $date = $entity->get('created')->value;
+        $date = date('M d Y', $date);
         $crawler->filter('[data-date="date"]')->text($date);
+        $crawler->filter('[data-date="date"]')->removeAttr('data-date');
       }
     }
+        
     return $crawler;
   }
 
-  public function checkBackgroundImage($crawler, $entity, $field_name, $field) {
-    $bundle = $entity->bundle();
-    if(strpos($field_name, 'field') !== false) {
-      $type = $entity->getFieldDefinition($field_name)->getType();
+  /**
+   * Replacing value for field based on field type and field display
+   * 
+   * @param $crawler, $field_name, $field, $field_display, $view_mode
+   *   crawler object
+   *   field name
+   *   field array
+   *   field display array
+   *   view mode
+   *
+   * @return
+   *   render crawler object/render markup after replacing value
+   */
+  public function findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field, $field_display, $view_mode) {
+    $field_crawler = $crawler->filter('[data-field="'.$field_name.'"]');
+    switch($field['type']) {
+      case 'link':
+        $field['content']['uri'] = str_replace('internal:/', '', $field['content']['uri']);
+        $field_crawler->setAttribute('href', '/'.$field['content']['uri'])->text($field['content']['title']);
+        break;
+
+      case 'image':
+        $field_crawler = $this->findAndReplaceImage($field_crawler, $field, $field_display);
+        $crawler = $this->handleLightbox($crawler, $field_name, $field);
+        break;
+
+      case 'iframe':
+        $field_crawler->setAttribute('src', $field['content']['url']);
+        $field_crawler->setAttribute('width', $field['content']['width']);
+        $field_crawler->setAttribute('height', $field['content']['height']);
+        break;
+
+      case 'file':
+        if($field_crawler->getAttribute('href')) {
+          $field_crawler->setAttribute('href', $field['content']['url']);
+        }else {
+          $field_crawler->setAttribute('src', $field['content']['url']);
+        }
+        break;
+
+      case 'entity_reference':
+        $field_crawler = $this->findAndReplaceEntityReference($crawler, $field_name, $field);
+        break;
+
+      case 'entity_reference_revisions':
+        $field_crawler = $this->findAndReplaceValueForParagraph($field_name, $field_crawler, $field);
+        break;
+
+      default:
+        $field_crawler = $this->findAndReplaceText($field_crawler, $field, $field_display);
+        break;
+    }
+
+    // adding quickedit for field 
+    if($view_mode == 'default') {
+      $crawler = $this->findAndReplaceAddingQuickEdit($crawler, $field_name, $field);
+    }
+    // remove necessary markup
+    $crawler = $this->findAndReplaceCleanUpMarkup($crawler, $field_name);
+    return $crawler;
+  }
+
+  public function handleLightbox($crawler, $field_name, $field) {
+    if($crawler->filter('.w-lightbox')->count()) {
+      $crawler->filter('script')->remove();
+      $crawler->filter('.w-lightbox')->append('
+        <script type="application/json" class="w-json">
+          { "items": [{
+              "type": "image",
+              "url": "'. $field['content']['url'] .'"
+            }] 
+          }
+        </script>');
+    }
+    return $crawler;
+  }
+  /**
+   * Replacing value for image field
+   * 
+   * @param $crawler, $field_name, $field, $field_display
+   *   crawler object
+   *   field name
+   *   field array
+   *   field display 
+   *
+   * @return
+   *   render crawler object/render markup after replacing value with correct format
+   */
+  public function findAndReplaceImage($crawler, $field, $field_display) {
+    $image_style = $field_display['settings']['image_style'];
+    $image = $this->generateImageStyle($field, $image_style);
+    switch($field_display['type']) {
+      case 'image':
+        $crawler->setAttribute('src', $image)->setAttribute('alt', $field['content']['alt']);
+        break;
+      case 'bg_image_formatter':
+        $crawler = $this->handleBackgroundImage($crawler, $field_display, $image);
+        break;
+    }
+    return $crawler;
+  }
+
+  /**
+   * Generate image style
+   * 
+   * @param $field, $image_style
+   *   field name
+   *   image style
+   *
+   * @return
+   *   full url of image style
+   */
+  public function generateImageStyle($field, $image_style) {
+    if(empty($field['content'])) {
+      return;
+    }
+    $file = File::load($field['content']['target_id']);
+    $uri = $file->get('uri')->value;
+    if($image_style == '') {
+      return file_create_url($uri);  
     }else {
-      $field_name = $bundle . '_' . $field_name;
+      $image_style_object = ImageStyle::load($image_style);
+      $image_style_uri = $image_style_object->buildUrl($uri);
+      return file_create_url($image_style_uri);
     }
-    $image = $entity->get($field_name)->getValue();
-    $bundle = $entity->bundle();
-    $entity_type = $entity->getEntityTypeId();
-    $component_display =  entity_get_display($entity_type, $bundle, 'default');
-    $entity_component = $component_display->getComponent($field_name);
-    if($entity_component['type'] == 'bg_image_formatter') {
-      $crawler = $this->handleBackgroundImage($crawler, $entity_component, $image);
-    }
-    return $crawler;
   }
 
+  /**
+   * Replacing value for text/text-long/text-plain/text-and-summary
+   * 
+   * @param $crawler, $field, $field_display
+   *   crawler object
+   *   field array
+   *   field display
+   *
+   * @return
+   *   render crawler object/render markup after replacing value with correct format
+   */
+  public function findAndReplaceText($crawler, $field, $field_display) {
+    switch($field_display['type']) {
+      case 'text_default':
+      case 'string':
+        $content = $field['content']['value'];
+        break;
+      case 'text_trimmed':
+        $content = text_summary($field['content']['value'], $format = NULL, $field_display['settings']['trim_length']);
+        break;
+    }
+    return $crawler->setInnerHtml($content);
+
+  }
+
+  /**
+   * Replacing value for field entity reference
+   * 
+   * @param $crawler, $field_name, $field
+   *   crawler object
+   *   field name
+   *   field array
+   *
+   * @return
+   *   render crawler object/render markup after replacing value
+   */
+  public function findAndReplaceEntityReference($crawler, $field_name, $field) {
+    switch($field['handler']) {
+      case 'default:view':
+        $view_render_array = views_embed_view($field['target_id']);
+        $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
+        break;
+
+      case 'default:block':
+        $block = \Drupal\block\Entity\Block::load($field['target_id']);
+        $block_content = \Drupal::entityManager()
+          ->getViewBuilder('block')
+          ->view($block);
+        $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
+        break;
+    }
+  }
+
+  /**
+   * Append background image styling to crawler
+   * 
+   * @param $crawler, $bg_display_component, $image
+   *   crawler object
+   *   display array of background image component
+   *   image url
+   *
+   * @return
+   *   render crawler object/render markup after append background image value
+   */
   public function handleBackgroundImage($crawler, $bg_display_component, $image) {
     if(!empty($image)) {
-      $image_id = $image[0]['target_id'];
-      $file = File::load($image_id);
-      $image_url = file_create_url($file->getFileUri());
-      // update media query usage later
       $media_query = $bg_display_component['settings']['css_settings']['bg_image_media_query'];
       $css_settings = $bg_display_component['settings']['css_settings'];
-      $css = bg_image_add_background_image($image_url, $css_settings);
+      $css = bg_image_add_background_image($image, $css_settings);
       $crawler->append('<style type="text/css">@media '. $media_query . '{' . $css . '}</style>');
+      return $crawler;
     }
-    return $crawler;
     // better solution is import background image through header
       // $elements = array();
 
@@ -215,6 +341,39 @@ abstract class ClutchBuilder {
       // ], 'bg_image_formatter_css_' . $entity->id()];
       // drupal_render($elements);
   }
+
+  /**
+   * Add quickedit only for admin user
+   * 
+   * @param $crawler, $field_name, $field
+   *   crawler object
+   *   field name
+   *   field array
+   *
+   * @return
+   *   render crawler object/render markup after adding quickedit
+   */
+  public function findAndReplaceAddingQuickEdit($crawler, $field_name, $field) {
+    if(in_array('administrator', \Drupal::currentUser()->getRoles())) {
+      $crawler->filter('[data-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit']);
+    }
+    return $crawler;
+  }
+
+  /**
+   * Clean up unnecessary markup (data-attributes)
+   * 
+   * @param $crawler, $field_name
+   *   crawler object
+   *   field name
+   *
+   * @return
+   *   render crawler object/render markup after cleanup markup
+   */
+  public function findAndReplaceCleanUpMarkup($crawler, $field_name) {
+    $crawler->filter('[data-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-field');
+    return $crawler;
+  } 
 
   /**
    * Change image path before render
@@ -359,6 +518,7 @@ abstract class ClutchBuilder {
         }
         $fields[$entity_paragraph_field]['value'] = $paragraph_fields;
         $fields[$entity_paragraph_field]['quickedit'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $field_name . '/' . $field_language . '/full';
+        $fields[$entity_paragraph_field]['type'] = 'entity_reference_revisions';
        }else {
          $non_paragraph_field = $this->collectFieldValues($entity, $field_definition);
          $key = key($non_paragraph_field);
@@ -411,8 +571,9 @@ abstract class ClutchBuilder {
    *   return entity object
    */
   public function createEntityFromTemplate($template) {
-    $bundle_info = $this->prepareEntityInfoFromTemplate($template);
-    $crawler = new HtmlPageCrawler($this->getHTMLTemplate($template));
+    $entity_info = $this->prepareEntityInfoFromTemplate($template);
+    $crawler = $entity_info['crawler'];
+    $bundle_info = $entity_info['entity'];
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
@@ -467,7 +628,7 @@ abstract class ClutchBuilder {
     $entity_info['id'] = $bundle;
     $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
     $entity_info['fields'] = $fields;
-    return $entity_info;
+    return [ 'crawler' => $crawler, 'entity' => $entity_info];
   }
 
   /**
@@ -536,7 +697,7 @@ abstract class ClutchBuilder {
     return $fields;
   }
 
-  function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
+  public function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
     // this crawler will crawl the paragraph html in the template
     $paragraph_crawler = new HtmlPageCrawler($crawler->getInnerHtml());
     $paragraph_bundle = $crawler->extract(array('data-field'))[0];
@@ -633,7 +794,7 @@ abstract class ClutchBuilder {
       if($field['field_type'] == 'image') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
         $uri = drupal_get_path('theme', $theme_name) .'/'. $field['value'];
-        if (file_exists($uri)) {
+        if (file_exists($uri) && !is_dir($uri)) {
           $image = File::create();
           $image->setFileUri($uri);
           $image->setOwnerId(\Drupal::currentUser()->id());

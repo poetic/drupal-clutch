@@ -180,9 +180,9 @@ class ComponentBuilder extends ClutchBuilder{
    */
   public function createEntitiesFromTemplate($bundles) {
     parent::createEntitiesFromTemplate($bundles);
-    entity_get_form_display('custom_page', 'custom_page', 'default')
-      ->setComponent('associated_components', array(
-        'type' => 'entity_reference_paragraphs',
+    entity_get_form_display('paragraph', 'associated_component', 'default')
+      ->setComponent('component', array(
+        'type' => 'entity_reference_autocomplete',
       ))
       ->save();
   }
@@ -308,7 +308,9 @@ class ComponentBuilder extends ClutchBuilder{
    */ 
   public function findAndReplace($template, $component, $view_mode = NULL) {
     $html = parent::findAndReplace($template, $component);
-    $html = $this->addQuickeditAttributeForBundle($html, $component);
+    if(in_array('administrator', \Drupal::currentUser()->getRoles())) {
+      $html = $this->addQuickeditAttributeForBundle($html, $component);
+    }
     return $html;
   }
 

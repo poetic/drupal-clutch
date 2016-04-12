@@ -44,6 +44,9 @@ class NodeBuilder extends ClutchBuilder{
     }
   }
 
+  /**
+   *  {@inheritdoc}
+   */
   public function collectFieldValues($node, $field_definition) {
     $bundle = $node->bundle();
     $field_type = $field_definition->getType();
