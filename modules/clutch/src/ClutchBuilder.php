@@ -672,7 +672,7 @@ abstract class ClutchBuilder {
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
     $form_flag = NULL;
     $form_indices = array();
-    $fields = $crawler->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle, &$form_flag, &$form_indices) {
+    $fields = $crawler->filterXPath('//*[@data-field][not(ancestor::form)]')->each(function (Crawler $node, $i) use ($bundle, &$form_flag, &$form_indices) {
       $field_type = $node->extract(array('data-type'))[0];
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
