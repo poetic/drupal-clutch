@@ -45,7 +45,6 @@ class FormBuilder extends ClutchBuilder{
 
   public function createBundle($bundle_info) {
     //TODO check if form already exists to reuse. always make new component type
-    dpm($bundle_info);
     $this->createForm($bundle_info);
     $this->removeDefaultFormFields($bundle_info); //TODO hide all fields in form automatically before creating new ones
     $this->createFields($bundle_info);

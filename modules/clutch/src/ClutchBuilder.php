@@ -66,6 +66,10 @@ abstract class ClutchBuilder {
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $crawler = $this->findAndReplaceValueForMenuLinks($crawler);
     }
+    if($crawler->filterXPath('//*[@data-form]')->count()) {
+      //Add 2 div fields to component when compare 1 ER field with 3 from template
+    }
+//    dpm($crawler->__toString());
     $html = $this->findAndReplaceValueForFields($crawler, $entity);
     return $html;
   }
@@ -80,10 +84,10 @@ abstract class ClutchBuilder {
    * @return
    *   crawler instance with update html
    */
+
   public function findAndReplaceValueForFields($crawler, $entity) {
     $fields = $this->collectFields($entity);
     $crawler = $this->routeImagePath($crawler);
-
     // if($entity->hasField('field_background_image')) {
     //   $crawler = $this->handleBackgroundImage($crawler, $entity);
     // }
@@ -92,8 +96,8 @@ abstract class ClutchBuilder {
       if($field['type'] == 'image') {
         $crawler = $this->checkBackgroundImage($crawler, $entity, $field_name, $field);
       }
-      if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
-        $field_type = $crawler->filter('[data-field="'.$field_name.'"]')->getAttribute('data-type');
+      if($crawler->filter('[data-field="form"]')->count()) {
+        $field_type = $crawler->filter('[data-field="form"]')->getAttribute('data-type');
         switch($field_type) {
           case 'link':
             $field['content']['uri'] = str_replace('internal:/', '', $field['content']['uri']);
@@ -135,20 +139,41 @@ abstract class ClutchBuilder {
             break;
 
           case 'entity_reference':
-            switch($field['handler']) {
-              case 'default:view':
-                $view_render_array = views_embed_view($field['target_id']);
-                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
-                break;
+            $message = \Drupal::entityManager()
+                ->getStorage('contact_message')
+                ->create(array(
+                    'contact_form' => 'contact_us',
+                ));
 
-              case 'default:block':
-                $block = \Drupal\block\Entity\Block::load($field['target_id']);
-                $block_content = \Drupal::entityManager()
-                  ->getViewBuilder('block')
-                  ->view($block);
-                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
-                break;
-            }
+
+            $out = $this->findAndReplaceValueForForm($crawler, $message);
+            $divs = $crawler->filter('[data-component]')->children()->filter('div')->saveHTML();
+
+            $crawler->setInnerHTML("")->append($out);
+            $crawler->append($divs);
+
+            dpm($crawler->saveHTML());
+
+//            switch($field['handler']) {
+//              case 'default:view':
+//                $view_render_array = views_embed_view($field['target_id']);
+//                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
+//                break;
+//
+//              case 'default:block':
+//                $block = \Drupal\block\Entity\Block::load($field['target_id']);
+//                $block_content = \Drupal::entityManager()
+//                  ->getViewBuilder('block')
+//                  ->view($block);
+//                $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
+//                break;
+//
+//              case 'default:contact_form':
+//                    //contact form load, try to render on page
+//                    //then load template and replace style classes for form
+//
+//                break;
+//            }
             break;
 
           default:
@@ -168,6 +193,57 @@ abstract class ClutchBuilder {
       }
     }
     return $crawler;
+  }
+
+  public function findAndReplaceValueForForm($crawler, $message) {
+    $formCrawler = $crawler->filter('form')->children();
+    $componentName = $crawler->attr('data-component');
+
+    $labelsCrawler = $formCrawler->filter('[for]');
+    $lbls = $labelsCrawler->each(function (Crawler $node, $i) {
+      return strtolower($node->attr("for"));
+    });
+//    dpm($lbls);
+
+    $fieldsCrawler = $formCrawler->filter('[data-field]');
+    $fields = $fieldsCrawler->each(function (Crawler $node, $i) {
+      return strtolower($node->attr("data-field"));
+    });
+//    dpm($fields);
+
+    $markup = \Drupal::service('entity.form_builder')->getForm($message);
+//    dpm($markup);
+//    dpm($message);
+
+    $fieldsCrawler->each(function (Crawler $node, $i) use (&$markup, $componentName, $labelsCrawler) {
+      $fldname = strtolower($node->attr("for"));
+      $datafieldName = strtolower($node->attr("data-field"));
+//      dpm($datafieldName);
+      if($fldname) {
+        //match label to markup
+        $field = $markup[$componentName."_".$fldname];
+
+        if($field) {
+//          dpm($field);
+        }
+        //append label above field markup
+      } else if ($datafieldName) {
+        //replace classs attributes
+        $classList = explode(" ", $node->attr('class'));
+        foreach($classList as $class) {
+          array_push($markup[$componentName."_".$datafieldName]['#attributes']['class'], $class);
+        }
+//        dpm($markup[$componentName."_".$datafieldName]['#attributes']['class']);
+      }
+    });
+
+    return drupal_render($markup)->__toString();
+//            dpm($formCrawler->saveHTML());
+//            add newly populated formCrawler to $crawler $crawler->clear()?
+//            $crawler = $crawler->append($markup);
+    //->append($markup);
+
+//    return $drupal_render($markup)__toString();
   }
 
   public function checkBackgroundImage($crawler, $entity, $field_name, $field) {
@@ -414,10 +490,10 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
-    dpm($bundle_info);
+//    dpm($bundle_info);
     if($bundle_info['contains_form'] == TRUE) {
-      // $form_builder = new FormBuilder;
-      // $form_builder->createBundle($bundle_info['fields'][0]);
+//      $form_builder = new FormBuilder;
+//      $form_builder->createBundle($bundle_info['fields'][0]);
     }
     $this->createBundle($bundle_info);
   }

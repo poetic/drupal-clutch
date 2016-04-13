@@ -189,6 +189,13 @@ class ComponentBuilder extends ClutchBuilder{
       $field_instance->save();
     }
 
+    if($field['field_type'] == 'entity-reference') {
+      $paragraph_bundle = str_replace($bundle . '_', '', $field['field_name']);
+      $handler_settings = $field_instance->setSetting('file_extensions', 'pdf doc docx txt');
+      $field_instance->save();
+    }
+
+
     // Assign widget settings for the 'default' form mode.
     entity_get_form_display('component', $bundle, 'default')
       ->setComponent($field['field_name'], array(
