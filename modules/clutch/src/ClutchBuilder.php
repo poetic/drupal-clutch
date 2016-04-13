@@ -30,6 +30,7 @@ use Drupal\clutch\TabBuilder;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\clutch\MenuBuilder;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\clutch\FormBuilder;
 
 /**
  * Class ClutchBuilder.
@@ -294,7 +295,9 @@ abstract class ClutchBuilder {
    *   render crawler object/render markup after replacing value
    */
   public function findAndReplaceEntityReference($crawler, $field_name, $field) {
+     dpm($field['handler']);
     switch($field['handler']) {
+
       case 'default:view':
         $view_render_array = views_embed_view($field['target_id']);
         $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($view_render_array)->__toString());
@@ -556,6 +559,11 @@ abstract class ClutchBuilder {
    *   TODO
    */
   public function createEntitiesFromTemplate($bundles) {
+    //make array if only creating one component (if string passed in)
+    if(!is_array($bundles)) {
+      $val = $bundles;
+      $bundles = array($bundles);
+    }
     foreach($bundles as $bundle) {
       $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
@@ -577,6 +585,12 @@ abstract class ClutchBuilder {
     if($crawler->filterXPath('//*[@data-menu]')->count()) {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
+    }
+    if($bundle_info['contains_form']) {
+      foreach($bundle_info['form_indices'] as $i) {
+        $form_builder = new FormBuilder;
+        $form_builder->createBundle($bundle_info['fields'][$i]);  
+      }
     }
     $this->createBundle($bundle_info);
   }
@@ -627,7 +641,10 @@ abstract class ClutchBuilder {
     $bundle = $this->getBundle($crawler);
     $entity_info['id'] = $bundle;
     $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
-    $entity_info['fields'] = $fields;
+    //fields array inside $fields['fields'] (was just $fields) 
+    $entity_info['fields'] = $fields['fields'];
+    $entity_info['contains_form'] = $fields['contains_form'];
+    $entity_info['form_indices'] = $fields['form_indices'];
     return [ 'crawler' => $crawler, 'entity' => $entity_info];
   }
 
@@ -653,12 +670,15 @@ abstract class ClutchBuilder {
    *   An array of fields info.
    */
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
-    $fields = $crawler->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
+    $form_flag = NULL;
+    $form_indices = array();
+    $fields = $crawler->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle, &$form_flag, &$form_indices) {
       $field_type = $node->extract(array('data-type'))[0];
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
       $field_formatter = $node->extract(array('data-format-type'))[0];
       $default_value = NULL;
+      $form_fields = NULL;
 
       switch($field_type) {
         case 'link':
@@ -680,21 +700,45 @@ abstract class ClutchBuilder {
           $default_value['height'] = $node->extract(array('height'))[0];
           break;
 
+        case 'entity_reference':
+          //case contact form
+          if($field_name == $bundle.'_form') {
+            $form_flag = TRUE;
+            array_push($form_indices, $i);
+            $formDOM = new HtmlPageCrawler($node->getInnerHtml());
+            $form_fields = $formDOM->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
+                return array(
+                  'field_name' => $bundle . '_' . $node->extract(array('data-field'))[0],
+                  'field_type' => $node->extract(array('data-type'))[0],
+                  'field_form_display' => $node->extract(array('data-form-type'))[0],
+                  'field_formatter' => $node->extract(array('data-format-type'))[0],
+                  'value' => $node->getInnerHtml(),
+                );
+            });
+          }
+          //other cases: menu?
+          break;
+
         default:
           $default_value = $node->getInnerHtml();
           break;
       }
 
       return array(
+        'id' => $bundle,
         'field_name' => $field_name,
         'field_type' => $field_type,
         'field_form_display' => $field_form_display,
         'field_formatter' => $field_formatter,
+        'fields' => $form_fields,
         'value' => $default_value,
       );
-    });
-
-    return $fields;
+    });            
+    return array(
+      'fields' => $fields,
+      'contains_form' => $form_flag,
+      'form_indices' => $form_indices,
+    );
   }
 
   public function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {

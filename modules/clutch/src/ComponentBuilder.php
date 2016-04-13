@@ -87,9 +87,9 @@ class ComponentBuilder extends ClutchBuilder{
         array(
           '@bundle' => $bundle_label,
         ));
-      $this->updateAssociatedComponents($bundle_info['id']);
+      // $this->updateAssociatedComponents($bundle_info['id']);
       $this->createFields($bundle_info);
-      $this->createDefaultContentForEntity($bundle_info, 'component');
+      // $this->createDefaultContentForEntity($bundle_info, 'component');
     }
   }
 
@@ -106,7 +106,9 @@ class ComponentBuilder extends ClutchBuilder{
   public function createField($bundle, $field) {
     // since we are going to treat each field unique to each bundle, we need to
     // create field storage(field base)
-    if($field['field_type'] == 'entity_reference_revisions') {
+    switch($field['field_type']) {
+
+     case 'entity_reference_revisions':
       $field_storage = FieldStorageConfig::create([
         'field_name' => $field['field_name'],
         'entity_type' => 'component',
@@ -117,7 +119,22 @@ class ComponentBuilder extends ClutchBuilder{
           'target_type' => 'paragraph'
          ),
       ]);
-    }else {
+      break;
+
+     case 'entity_reference':
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field['field_name'],
+        'entity_type' => 'component',
+        'type' => $field['field_type'],
+        'cardinality' => -1,
+        'custom_storage' => FALSE,
+        'settings' => array(
+          'target_type' => 'contact_form'
+         ),
+      ]);
+      break;
+
+      default:
       $field_storage = FieldStorageConfig::create([
         'field_name' => $field['field_name'],
         'entity_type' => 'component',
@@ -125,6 +142,7 @@ class ComponentBuilder extends ClutchBuilder{
         'cardinality' => 1,
         'custom_storage' => FALSE,
       ]);
+      break;
     }
 
     $field_storage->save();
