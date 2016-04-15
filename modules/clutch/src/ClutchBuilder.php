@@ -586,13 +586,13 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
-    if($bundle_info['contains_form']) {
-      foreach($bundle_info['form_indices'] as $i) {
-        $form_builder = new FormBuilder;
-        $form_builder->createBundle($bundle_info['fields'][$i]);  
-      }
-    }
-    $this->createBundle($bundle_info);
+    // if($bundle_info['contains_form']) {
+    //   foreach($bundle_info['form_indices'] as $i) {
+    //     $form_builder = new FormBuilder;
+    //     $form_builder->createBundle($bundle_info['fields'][$i]);  
+    //   }
+    // }
+    // $this->createBundle($bundle_info);
   }
 
   /**
@@ -701,28 +701,15 @@ abstract class ClutchBuilder {
           break;
 
         case 'entity_reference':
-          //case contact form
-          if($field_name == $bundle.'_form') {
-            $form_flag = TRUE;
-            array_push($form_indices, $i);
-            $formDOM = new HtmlPageCrawler($node->getInnerHtml());
-            $form_fields = $formDOM->filterXPath('//*[@data-field]')->each(function (Crawler $node, $i) use ($bundle) {
-                return array(
-                  'field_name' => $bundle . '_' . $node->extract(array('data-field'))[0],
-                  'field_type' => $node->extract(array('data-type'))[0],
-                  'field_form_display' => $node->extract(array('data-form-type'))[0],
-                  'field_formatter' => $node->extract(array('data-format-type'))[0],
-                  'value' => $node->getInnerHtml(),
-                );
-            });
+          if($node->filterXPath('form')->count()) {
+            return $this->getFieldsInfoFromTemplateForForm($node, $field_name, $bundle);
           }
-          //other cases: menu?
           break;
 
         default:
           $default_value = $node->getInnerHtml();
           break;
-      }
+      }      
 
       return array(
         'id' => $bundle,
@@ -730,15 +717,27 @@ abstract class ClutchBuilder {
         'field_type' => $field_type,
         'field_form_display' => $field_form_display,
         'field_formatter' => $field_formatter,
-        'fields' => $form_fields,
         'value' => $default_value,
       );
-    });            
+    });   
+    dpm($fields);         
     return array(
       'fields' => $fields,
       'contains_form' => $form_flag,
       'form_indices' => $form_indices,
     );
+  }
+
+  public function getFieldsInfoFromTemplateForForm($crawler, $field_name, $bundle) {
+    return $crawler->filterXPath('//*[@data-form]')->each(function (Crawler $node, $i) use ($bundle) {
+      return array(
+        'field_name' => $bundle . '_' . $node->extract(array('data-field'))[0],
+        'field_type' => $node->extract(array('data-type'))[0],
+        'field_form_display' => $node->extract(array('data-form-type'))[0],
+        'field_formatter' => $node->extract(array('data-format-type'))[0],
+        'value' => $node->getInnerHtml(),
+      );
+    });
   }
 
   public function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
