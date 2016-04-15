@@ -41,19 +41,12 @@ class FormBuilder extends ClutchBuilder{
 
   public function createBundle($bundle_info) {
     //TODO check if form already exists to reuse. always make new component type
-    // dpm('b4 create Form');
     $this->createForm($bundle_info);
-    // dpm('after create Form');
-    // dpm('b4 remove default form fields');
     $this->removeDefaultFormFields($bundle_info);
-    // dpm('after remove default form fields');
-    // dpm('b4 create Fields');
     $this->createFields($bundle_info);
-    // dpm('after create form fields');
   }
 
   public function createForm(&$bundle_info) {
-    dpm('creating');
     $form_type = ContactForm::create(array(
       'id' => $bundle_info['id'],
       'label' => ucwords(str_replace('_', ' ', $bundle_info['id'])),

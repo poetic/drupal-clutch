@@ -295,7 +295,7 @@ abstract class ClutchBuilder {
    *   render crawler object/render markup after replacing value
    */
   public function findAndReplaceEntityReference($crawler, $field_name, $field) {
-     dpm($field['handler']);
+     // dpm($field['handler']);
     switch($field['handler']) {
 
       case 'default:view':
@@ -586,12 +586,6 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
-    // if($bundle_info['contains_form']) {
-    //   foreach($bundle_info['form_indices'] as $i) {
-    //     $form_builder = new FormBuilder;
-    //     $form_builder->createBundle($bundle_info['fields'][$i]);  
-    //   }
-    // }
     // $this->createBundle($bundle_info);
   }
 
@@ -642,9 +636,7 @@ abstract class ClutchBuilder {
     $entity_info['id'] = $bundle;
     $fields = $this->getFieldsInfoFromTemplate($crawler, $bundle);
     //fields array inside $fields['fields'] (was just $fields) 
-    $entity_info['fields'] = $fields['fields'];
-    $entity_info['contains_form'] = $fields['contains_form'];
-    $entity_info['form_indices'] = $fields['form_indices'];
+    $entity_info['fields'] = $fields;
     return [ 'crawler' => $crawler, 'entity' => $entity_info];
   }
 
@@ -670,15 +662,12 @@ abstract class ClutchBuilder {
    *   An array of fields info.
    */
   public function getFieldsInfoFromTemplate(Crawler $crawler, $bundle) {
-    $form_flag = NULL;
-    $form_indices = array();
-    $fields = $crawler->filterXPath('//*[@data-field][not(ancestor::form)]')->each(function (Crawler $node, $i) use ($bundle, &$form_flag, &$form_indices) {
+    $fields = $crawler->filterXPath('//*[@data-field][not(ancestor::form)]')->each(function (Crawler $node, $i) use ($bundle) {
       $field_type = $node->extract(array('data-type'))[0];
       $field_name = $bundle . '_' . $node->extract(array('data-field'))[0];
       $field_form_display = $node->extract(array('data-form-type'))[0];
       $field_formatter = $node->extract(array('data-format-type'))[0];
       $default_value = NULL;
-      $form_fields = NULL;
 
       switch($field_type) {
         case 'link':
@@ -702,7 +691,8 @@ abstract class ClutchBuilder {
 
         case 'entity_reference':
           if($node->filterXPath('form')->count()) {
-            return $this->getFieldsInfoFromTemplateForForm($node, $field_name, $bundle);
+            //returns form id
+             $default_value = $this->createFormAndReturnId($node, $field_name, $bundle);
           }
           break;
 
@@ -720,16 +710,13 @@ abstract class ClutchBuilder {
         'value' => $default_value,
       );
     });   
-    dpm($fields);         
-    return array(
-      'fields' => $fields,
-      'contains_form' => $form_flag,
-      'form_indices' => $form_indices,
-    );
+    // dpm($fields);         
+    return $fields;
   }
 
-  public function getFieldsInfoFromTemplateForForm($crawler, $field_name, $bundle) {
-    return $crawler->filterXPath('//*[@data-form]')->each(function (Crawler $node, $i) use ($bundle) {
+  public function createFormAndReturnId($crawler, $field_name, $bundle) {
+    $form_builder = new FormBuilder;
+    $fields = $crawler->filterXPath('//*[@data-field][ancestor::form]')->each(function (Crawler $node, $i) use ($bundle) {
       return array(
         'field_name' => $bundle . '_' . $node->extract(array('data-field'))[0],
         'field_type' => $node->extract(array('data-type'))[0],
@@ -738,6 +725,13 @@ abstract class ClutchBuilder {
         'value' => $node->getInnerHtml(),
       );
     });
+    $bundle_info = array (
+      'id' => $bundle,
+      'fields' => $fields,
+    );
+
+    $form_builder->createBundle($bundle_info);
+    return $bundle;//form id
   }
 
   public function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
