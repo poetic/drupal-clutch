@@ -295,7 +295,6 @@ abstract class ClutchBuilder {
    *   render crawler object/render markup after replacing value
    */
   public function findAndReplaceEntityReference($crawler, $field_name, $field) {
-     // dpm($field['handler']);
     switch($field['handler']) {
 
       case 'default:view':
@@ -709,8 +708,7 @@ abstract class ClutchBuilder {
         'field_formatter' => $field_formatter,
         'value' => $default_value,
       );
-    });   
-    // dpm($fields);         
+    });          
     return $fields;
   }
 
@@ -726,12 +724,12 @@ abstract class ClutchBuilder {
       );
     });
     $bundle_info = array (
-      'id' => $bundle,
+      'id' => $bundle.'_form',
       'fields' => $fields,
     );
 
     $form_builder->createBundle($bundle_info);
-    return $bundle;//form id
+    return $bundle_info['id'];//form id
   }
 
   public function getFieldsInfoFromTemplateForParagraph($crawler, $field_name) {
