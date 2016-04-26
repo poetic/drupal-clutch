@@ -36,13 +36,13 @@ class CreateCommand extends Command {
       ->setDescription('This will generate your components folder')
             ->addOption(
                 'zip-file',
-                '',
+                '-z',
                 InputOption::VALUE_REQUIRED,
                 $this->trans('commands.generate.theme.options.module')
             )
             ->addOption(
                 'theme-name',
-                '',
+                '-theme',
                 InputOption::VALUE_REQUIRED,
                 $this->trans('commands.generate.theme.options.machine-name')
             );
@@ -75,6 +75,7 @@ class CreateCommand extends Command {
       //   $question = new Question('<info>Please enter theme description:</info> <comment>[These is a webflow theme]</comment> ', 'These is a webflow theme');
       //   $themeDesc = $helper->ask($input, $output, $question);
       // }
+      $themeDesc = 'These is a webflow theme';
       $path = getcwd().'/temp';
       $zip = new ZipArchive;
       if ($zip->open($withZip) === TRUE) {
@@ -95,16 +96,16 @@ class CreateCommand extends Command {
       $output->setFormatter(new OutputFormatter(true));
       $rows = 8;
       $progressBar = new ProgressBar($output, $rows);
+      $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%');
       $progressBar->setBarCharacter('<fg=magenta>=</>');
       $progressBar->setProgressCharacter("\xF0\x9F\x8F\x83");
+      $progressBar->setOverwrite(true);
 
       for ($i = 0; $i<$rows; $i++) {
         $create->Components($themeDir,$theme,$htmlfiles,'data-component','components');
         $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
-        $create->Components($themeDir,$theme,$htmlfiles,'data-view','views');
-        $create->Components($themeDir,$theme,$htmlfiles,'data-views-teaser','teaser');
         $create->Components($themeDir,$theme,$htmlfiles,'data-menu','menus');
-        $progressBar->advance();
+        $progressBar->advance(2);
         $create->Directory($path,$Root,$themeDir,$theme,$bundlezip);
         $progressBar->advance();
         $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
@@ -116,14 +117,14 @@ class CreateCommand extends Command {
         \Drupal::service('theme_handler')->rebuildThemeData();
         $progressBar->advance();
         \Drupal::service('theme_handler')->reset();
-        $progressBar->advance();
-        // $output->writeln('<comment>'.$theme.' is now installed and set as default.</comment>');
-      }
-              \Drupal::service('theme_handler')->refreshInfo();
+         \Drupal::service('theme_handler')->refreshInfo();
         \Drupal::service('theme_handler')->listInfo();
-        $this->getChain()->addCommand('cache:rebuild', ['cache' => 'all']);
-        $this->getChain()->addCommand('clutch:sync', ['theme' => 'asd']);
-      $progressBar->finish();
-      $output->writeln('');
+        // $this->getChain()->addCommand('cache:rebuild', ['cache' => 'all']);
+        // $this->getChain()->addCommand('clutch:sync', ['theme' => $theme]);
+        $progressBar->advance();
+        $output->writeln('<comment>'. "\r\n" .'Your theme '.$theme.' is now created.</comment>');
+        return true;
+      }
+      $progressBar->finish();      
   }
 }

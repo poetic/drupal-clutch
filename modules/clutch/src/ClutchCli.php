@@ -152,7 +152,7 @@ class ClutchCli {
                   for ($i = 1; $i < count($bundle_names); $i++) { //Search for each data-component found
                     // echo $bundle_names[$i];
                     $result = '';
-                    $query = '//div[@'.$dataBundle.'="' . $bundle_names[$i] . '"]/node()/..';
+                    $query = '//*[@'.$dataBundle.'="' . $bundle_names[$i] . '"]/node()/..';
                     $node = $xpath->evaluate($query);
                       foreach ($node as $childNode) {
                         $result .= $doc->saveHtml($childNode); //store the div block to result line by line;
@@ -172,7 +172,8 @@ class ClutchCli {
                 if (!file_exists($theme_components)) {
                 mkdir($theme_components, 0777, true);
                 }
-                $page = $yamls.$bundle.'.yml';
+                if($bundle == 'components'){
+                  $page = $yamls.$bundle.'.yml';
                   if(0 < count($bundle_names)){
                     $pageBundle = $bundle_file_name . ":\r\n  ";
                     $pageBundle .= $bundle.':' . "\r\n      ";
@@ -183,6 +184,8 @@ class ClutchCli {
                     $pageBundle .= '' . "\r\n";
                   }
                 file_put_contents($page, $pageBundle, FILE_APPEND);
+                }
+                
 
                 foreach ($extracted_info as &$info) {
                   if (!file_exists($theme_components . $info[0] )) {
