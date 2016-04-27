@@ -464,12 +464,23 @@ abstract class ClutchBuilder {
 
   public function findAndReplaceValueForMenuLinks($crawler) {
     $menu_name = $crawler->filterXpath('//*[@data-menu]')->extract('data-menu')[0];
-    $single_menu_crawler = $crawler->filter('nav.nav-menu a')->eq(0);
-    $clone_single_menu_crawler = new HtmlPageCrawler($single_menu_crawler->saveHTML());
+    // $single_menu_crawler = $crawler->filter('nav.nav-menu a')->eq(0);
+    // $clone_single_menu_crawler = new HtmlPageCrawler($single_menu_crawler->saveHTML());
+    $single_menu_template = '<a href="index.html" class="w-nav-link nav-link">Home</a>';
+    $clone_single_menu_crawler = new HtmlPageCrawler($single_menu_template);
     
     if($crawler->filter('.w-dropdown')->count()) {
-      $dropdown_menu_crawler = $crawler->filter('.w-dropdown')->eq(0);
-      $clone_dropdown_menu_crawler = new HtmlPageCrawler($dropdown_menu_crawler->saveHTML());
+      // $dropdown_menu_crawler = $crawler->filter('.w-dropdown')->eq(0);
+      // $clone_dropdown_menu_crawler = new HtmlPageCrawler($dropdown_menu_crawler->saveHTML());
+      $dropdown_menu_template = '<div data-delay="0" class="w-dropdown w-clearfix">
+        <div class="w-dropdown-toggle nav-link drop-down">
+          <div>Home</div>
+          <div class="w-icon-dropdown-toggle icon"></div>
+        </div>
+        <nav class="w-dropdown-list dropdown-list">
+        </nav>
+      </div>';
+      $clone_dropdown_menu_crawler = new HtmlPageCrawler($dropdown_menu_template);
     }
     
     $menu_render_array = $this->getRenderArrayForMenu($menu_name);
@@ -480,10 +491,10 @@ abstract class ClutchBuilder {
     foreach($menu_items as $menu) {
       if(empty($menu['below'])) {
         $menu_html = $this->handleSingleMenuLink($clone_single_menu_crawler, $menu);
-        $crawler->filter('nav.nav-menu')->append($menu_html->saveHTML());
+        $crawler->filter('nav.nav-menu')->append($menu_html);
       }else {
         $dropdown_menu_html = $this->handleDropdownMenu($clone_dropdown_menu_crawler, $menu);
-        $crawler->filter('nav.nav-menu')->append($dropdown_menu_html->saveHTML());
+        $crawler->filter('nav.nav-menu')->append($dropdown_menu_html);
       }
     }
 
@@ -491,25 +502,27 @@ abstract class ClutchBuilder {
   }
   
   public function handleDropdownMenu($crawler, $menu) {
-    $sub_menu_crawler = $crawler->filter('nav a')->eq(0);
-    $clone_sub_menu_crawler = new HtmlPageCrawler($sub_menu_crawler->saveHTML());
+    // $sub_menu_crawler = $crawler->filter('nav a')->eq(0);
+    // $clone_sub_menu_crawler = new HtmlPageCrawler($sub_menu_crawler->saveHTML());
+    $sub_menu_template = '<a href="home" class="w-dropdown-link nav-link sub-link">home</a>';
+    $clone_sub_menu_crawler = new HtmlPageCrawler($sub_menu_template);
     $parent_menu_title = $menu['title'];
 
     // parent does not have link
     $crawler->filter('.w-dropdown-toggle.nav-link div:not(.icon)')->text($parent_menu_title);
-    $crawler->filter('nav.w-dropdown-list')->setInnerHtml('');
+    // $crawler->filter('nav.w-dropdown-list')->setInnerHtml('');
     foreach($menu['below'] as $menu) {
       $menu_html = $this->handleSingleMenuLink($clone_sub_menu_crawler, $menu);     
-      $crawler->filter('nav.w-dropdown-list')->append($menu_html->saveHTML());
+      $crawler->filter('nav.w-dropdown-list')->append($menu_html);
     }
-    return $crawler;
+    return $crawler->saveHTML();
   }
 
   public function handleSingleMenuLink($crawler, $menu) {
     $link = $menu['url']->toString();
     $title = $menu['title'];
     $crawler->setAttribute('href', $link)->setInnerHtml($title);
-    return $crawler;
+    return $crawler->saveHTML();
   }
 
   // Instruction from https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Menu!menu.api.php/group/menu/8.2.x#sec_rendering
