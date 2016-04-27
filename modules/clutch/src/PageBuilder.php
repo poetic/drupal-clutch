@@ -79,7 +79,7 @@ class PageBuilder {
         'target_id' => key($component_id),
       ],
       'region' => [
-        'value' => $component_position,
+        'value' => !empty($component_position) ? $component_position:'content',
         'format' => 'string',
       ],
     ]);
