@@ -55,6 +55,9 @@ class MenuBuilder extends ClutchBuilder{
       $menu_links = $crawler->filter('.w-nav-link')->each(function (Crawler $node, $i) use ($menu_name) {
         $link = $node->extract(array('href'))[0];
         $link = str_replace('.html', '', $link);
+        if(strpos($link, 'http') !== TRUE) {
+          $link = '/' . $link;
+        }
         $title = $node->extract(array('_text'))[0];
         $this->createMenuLink($title, 'internal:/' . $link, $menu_name, TRUE, NULL);
       });
@@ -75,6 +78,9 @@ class MenuBuilder extends ClutchBuilder{
     $menu_links = $crawler->filter('.sub-link')->each(function (Crawler $node, $i) use ($menu_name, $parent) {
       $link = $node->extract(array('href'))[0];
       $link = str_replace('.html', '', $link);
+      if(strpos($link, 'http') !== TRUE) {
+        $link = '/' . $link;
+      }
       $title = $node->extract(array('_text'))[0];
       $this->createMenuLink($title, 'internal:/' . $link, $menu_name, FALSE, $parent);
     });
