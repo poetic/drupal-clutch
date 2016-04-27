@@ -42,21 +42,23 @@ class FormBuilder extends ClutchBuilder{
   public function createBundle($bundle_info) {
     //TODO check if form already exists to reuse. always make new component type
     $this->createForm($bundle_info);
-    $this->removeDefaultFormFields($bundle_info);
-    $this->createFields($bundle_info);
   }
 
   public function createForm(&$bundle_info) {
-    $form_type = ContactForm::create(array(
-      'id' => $bundle_info['id'],
-      'label' => ucwords(str_replace('_', ' ', $bundle_info['id'])),
-      'type' => "contact_form",
-    ))->save();
-    \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
-    array(
-      '@bundle' => $bundle_info,
-      'form' => $form_type
-    ));
+    if(!\Drupal::entityQuery('contact_form')->condition('id', $bundle_info['id'])->execute()){
+      $form_type = ContactForm::create(array(
+        'id' => $bundle_info['id'],
+        'label' => ucwords(str_replace('_', ' ', $bundle_info['id'])),
+        'type' => "contact_form",
+      ))->save();
+      \Drupal::logger('clutch:workflow')->notice('Create bundle @bundle',
+      array(
+        '@bundle' => $bundle_info,
+        'form' => $form_type
+      ));
+      $this->createFields($bundle_info);
+      $this->removeDefaultFormFields($bundle_info);
+    }
   }
 
   public function createField($id, $field) {

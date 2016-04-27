@@ -87,9 +87,9 @@ class ComponentBuilder extends ClutchBuilder{
         array(
           '@bundle' => $bundle_label,
         ));
-      // $this->updateAssociatedComponents($bundle_info['id']);
+      $this->updateAssociatedComponents($bundle_info['id']);
       $this->createFields($bundle_info);
-      // $this->createDefaultContentForEntity($bundle_info, 'component');
+      $this->createDefaultContentForEntity($bundle_info, 'component');
     }
   }
 

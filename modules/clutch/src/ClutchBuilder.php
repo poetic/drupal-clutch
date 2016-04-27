@@ -109,7 +109,7 @@ abstract class ClutchBuilder {
         $field_display = $entity_display->getComponent($field_name);
       }
       if($crawler->filter('[data-field="'.$field_name.'"]')->count()) {
-        $crawler = $this->findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field_value, $field_display, $view_mode);
+        $crawler = $this->findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field_value, $field_display, $view_mode, $entity);
       }
     }
 
@@ -134,17 +134,18 @@ abstract class ClutchBuilder {
   /**
    * Replacing value for field based on field type and field display
    * 
-   * @param $crawler, $field_name, $field, $field_display, $view_mode
+   * @param $crawler, $field_name, $field, $field_display, $view_mode, $entity
    *   crawler object
    *   field name
    *   field array
    *   field display array
    *   view mode
+   *   entity
    *
    * @return
    *   render crawler object/render markup after replacing value
    */
-  public function findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field, $field_display, $view_mode) {
+  public function findAndReplaceValueForFieldBasedOnType($crawler, $field_name, $field, $field_display, $view_mode, $entity) {
     $field_crawler = $crawler->filter('[data-field="'.$field_name.'"]');
     switch($field['type']) {
       case 'link':
@@ -172,7 +173,7 @@ abstract class ClutchBuilder {
         break;
 
       case 'entity_reference':
-        $field_crawler = $this->findAndReplaceEntityReference($crawler, $field_name, $field);
+        $field_crawler = $this->findAndReplaceEntityReference($crawler, $field_name, $field, $entity);
         break;
 
       case 'entity_reference_revisions':
@@ -287,16 +288,21 @@ abstract class ClutchBuilder {
   /**
    * Replacing value for field entity reference
    * 
-   * @param $crawler, $field_name, $field
+   * @param $crawler, $field_name, $field, $entity
    *   crawler object
    *   field name
    *   field array
+   *   entity
    *
    * @return
    *   render crawler object/render markup after replacing value
    */
-  public function findAndReplaceEntityReference($crawler, $field_name, $field) {
-    switch($field['handler']) {
+  public function findAndReplaceEntityReference($crawler, $field_name, $field, $entity) {
+    $entity_type = $entity->getEntityTypeId();
+    $bundle = $entity->bundle();
+    $field_instance = FieldConfig::loadByName($entity_type, $bundle , $bundle . '_' . $field_name);
+    $settings = $field_instance->getSettings();
+    switch($settings['handler']) {
 
       case 'default:view':
         $view_render_array = views_embed_view($field['target_id']);
@@ -309,6 +315,21 @@ abstract class ClutchBuilder {
           ->getViewBuilder('block')
           ->view($block);
         $crawler->filter('[data-field="'.$field_name.'"]')->append(drupal_render($block_content)->__toString());
+        break;
+      
+      case 'default:contact_form':
+        $form_id = $field['content']['target_id'];
+        $message = \Drupal::entityManager()
+          ->getStorage('contact_message')
+          ->create(array(
+            'contact_form' => $form_id,
+          ));
+        $render_markup = \Drupal::service('entity.form_builder')->getForm($message);
+        $markup = drupal_render($render_markup);
+        $crawler->filter('[data-field="'.$field_name.'"]')->replaceWith($markup->__toString());
+        break;
+      
+      default:
         break;
     }
   }
@@ -647,7 +668,7 @@ abstract class ClutchBuilder {
       $menu_builder = new MenuBuilder;
       $menu_builder->createMenu($crawler);
     }
-    // $this->createBundle($bundle_info);
+    $this->createBundle($bundle_info);
   }
 
   /**
@@ -761,7 +782,7 @@ abstract class ClutchBuilder {
         case 'entity_reference':
           if($node->filterXPath('form')->count()) {
             //returns form id
-             $default_value = $this->createFormAndReturnId($node, $field_name, $bundle);
+            $default_value = $this->createFormAndReturnId($node, $field_name, $bundle);
           }
           break;
 
