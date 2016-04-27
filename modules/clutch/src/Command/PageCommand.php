@@ -136,7 +136,7 @@ class PageCommand extends Command {
             }
         }
 
-
+    $output->writeln('<info>Oh Well now you can... Ummm TAKE A WALK?</info>');
       \Drupal::service('theme_installer')->install([$theme]);
       \Drupal::service('theme_handler')->setDefault($theme);
 // $this->getChain()->addCommand('theme:install', ['theme' => '']);
@@ -148,7 +148,7 @@ class PageCommand extends Command {
 
       $PageBuilder = new PageBuilder;
       $PageBuilder->createPages($theme);
-      $output->writeln('<info>Oh Well now you can... Ummm TAKE A WALK?</info>');
+      $output->writeln('<info>Le clutch!</info>');
 
     }
 }
