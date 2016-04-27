@@ -755,7 +755,7 @@ abstract class ClutchBuilder {
         case 'link':
           $uri = $node->extract(array('href'))[0];
           if(!strpos($uri, '//')) {
-            $uri = '/' . $uri;
+            $uri = 'internal:/' . $uri;
           }
           $default_value['uri'] = str_replace('.html', '', $uri);
           $default_value['title'] = $node->extract(array('_text'))[0];

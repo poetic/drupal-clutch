@@ -81,19 +81,19 @@ class ParagraphBuilder extends ClutchBuilder{
           '@bundle' => $bundle_label,
         ));
       $this->createFields($bundle_info);
-      $array_of_referenced_paragraph = array();
-      foreach($bundle_info['fields'] as $content) {
-        $bundle = array(
-          'id' => $bundle_info['id'],
-          'fields' => $content
-        );
-        $paragraph = $this->createDefaultContentForEntity($bundle, 'paragraph');
-        $temp['target_id'] = $paragraph->id();
-        $temp['target_revision_id'] = $paragraph->getRevisionId();
-        $array_of_referenced_paragraph[] = $temp;
-      }
-      return $array_of_referenced_paragraph;
     }
+    $array_of_referenced_paragraph = array();
+    foreach($bundle_info['fields'] as $content) {
+      $bundle = array(
+        'id' => $bundle_info['id'],
+        'fields' => $content
+      );
+      $paragraph = $this->createDefaultContentForEntity($bundle, 'paragraph');
+      $temp['target_id'] = $paragraph->id();
+      $temp['target_revision_id'] = $paragraph->getRevisionId();
+      $array_of_referenced_paragraph[] = $temp;
+    }
+    return $array_of_referenced_paragraph;
   }
   
   /**
@@ -164,7 +164,7 @@ class ParagraphBuilder extends ClutchBuilder{
           case 'link':
             $uri = $node->extract(array('href'))[0];
             if(!strpos($uri, '//')) {
-              $uri = '/' . $uri;
+              $uri = 'internal:/' . $uri;
             }
             $default_value['uri'] = str_replace('.html', '', $uri);
             $default_value['title'] = $node->extract(array('_text'))[0];
