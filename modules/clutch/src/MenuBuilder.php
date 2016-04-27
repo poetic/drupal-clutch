@@ -47,21 +47,55 @@ class MenuBuilder extends ClutchBuilder{
       ));
       $menu->save();
 
-    // check if menu has sub menu
-    // dpm($crawler->filter('.dropdown')->count());
-
+      // check if menu has sub menu
+      if($crawler->filter('.w-dropdown')->count()) {
+        $this->handleDropdownMenu($crawler, $menu_name);
+      }
+      // proceed with single menu item
       $menu_links = $crawler->filter('.w-nav-link')->each(function (Crawler $node, $i) use ($menu_name) {
-        $link = strtolower($node->extract(array('_text'))[0]);
-        $link = str_replace(' ', '-', $link);
-        $menu_link = MenuLinkContent::create([
-            'title' => $node->extract(array('_text'))[0],
-            'link' => ['uri' => 'internal:/' . $link],
-            'menu_name' => $menu_name,
-            'expanded' => TRUE,
-        ]);
-        $menu_link->save();
+        $link = $node->extract(array('href'))[0];
+        $link = str_replace('.html', '', $link);
+        if(!strpos($uri, '//')) {
+          $link = '/' . $link;
+        }
+        $title = $node->extract(array('_text'))[0];
+        $this->createMenuLink($title, 'internal:/' . $link, $menu_name, TRUE, NULL);
       });
     }
+  }
+
+  public function handleDropdownMenu($crawler, $menu_name) {
+    $menu_links = $crawler->filter('.w-dropdown')->each(function (Crawler $node, $i) use ($menu_name) {
+      $title = $node->filter('.w-dropdown-toggle.nav-link div')->text();
+      $parent_menu = $this->createMenuLink($title, NULL, $menu_name, TRUE, NULL);
+      $this->handleChildrenLinks($node, $parent_menu, $menu_name);
+    });
+  }
+
+  public function handleChildrenLinks($crawler, $parent_menu, $menu_name) {
+    $parent_menu_uuid = $parent_menu->uuid();
+    $parent = "menu_link_content:$parent_menu_uuid";
+    $menu_links = $crawler->filter('.sub-link')->each(function (Crawler $node, $i) use ($menu_name, $parent) {
+      $link = $node->extract(array('href'))[0];
+      $link = str_replace('.html', '', $link);
+      if(!strpos($uri, '//')) {
+        $link = '/' . $link;
+      }
+      $title = $node->extract(array('_text'))[0];
+      $this->createMenuLink($title, 'internal:/' . $link, $menu_name, FALSE, $parent);
+    });
+  }
+
+  public function createMenuLink($title, $link, $menu_name, $expanded, $parent) {
+    $menu_link = MenuLinkContent::create([
+        'title' => $title,
+        'link' => ['uri' => $link],
+        'menu_name' => $menu_name,
+        'expanded' => $expanded,
+        'parent' => $parent,
+    ]);
+    $menu_link->save(); 
+    return $menu_link;
   }
 
   public function collectFieldValues($entity, $field_definition) {

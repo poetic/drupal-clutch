@@ -273,6 +273,7 @@ abstract class ClutchBuilder {
     switch($field_display['type']) {
       case 'text_default':
       case 'string':
+      case 'basic_string':
         $content = $field['content']['value'];
         break;
       case 'text_trimmed':
@@ -437,26 +438,77 @@ abstract class ClutchBuilder {
       $crawler->filter('.w-tab-pane')->removeClass('w--tab-active');
       $crawler->filter('.w-tab-pane')->eq(0)->addClass('w--tab-active');
     }
-
     return $crawler;
   }
 
   public function findAndReplaceValueForMenuLinks($crawler) {
-    $menu_item_template = $crawler->filter('nav.nav-menu a')->eq(0);
     $menu_name = $crawler->filterXpath('//*[@data-menu]')->extract('data-menu')[0];
+    $single_menu_crawler = $crawler->filter('nav.nav-menu a')->eq(0);
+    $clone_single_menu_crawler = new HtmlPageCrawler($single_menu_crawler->saveHTML());
+    
+    if($crawler->filter('.w-dropdown')->count()) {
+      $dropdown_menu_crawler = $crawler->filter('.w-dropdown')->eq(0);
+      $clone_dropdown_menu_crawler = new HtmlPageCrawler($dropdown_menu_crawler->saveHTML());
+    }
+    
+    $menu_render_array = $this->getRenderArrayForMenu($menu_name);
+    $menu_items = $menu_render_array['#items'];
+
     $crawler->filter('nav.nav-menu')->setInnerHtml('');
-    $menu_items = \Drupal::entityQuery('menu_link_content')->condition('menu_name',$menu_name)->sort('weight')->execute();
-    $menu_item_objects = MenuLinkContent::loadMultiple($menu_items);
-    foreach($menu_item_objects as $menu_item_object){
-      $menu_item_array = $menu_item_object->toArray();
-      $menu_item_uri = str_replace('internal:', '', $menu_item_array['link'][0]['uri']);
-      $menu_item_name = $menu_item_array['title'][0]['value'];
-      $new_menu_link = $menu_item_template->setAttribute('href', $menu_item_uri)->text($menu_item_name);
-      $crawler->filter('nav.nav-menu')->append($new_menu_link->saveHTML());
+
+    foreach($menu_items as $menu) {
+      if(empty($menu['below'])) {
+        $menu_html = $this->handleSingleMenuLink($clone_single_menu_crawler, $menu);
+        $crawler->filter('nav.nav-menu')->append($menu_html->saveHTML());
+      }else {
+        $dropdown_menu_html = $this->handleDropdownMenu($clone_dropdown_menu_crawler, $menu);
+        $crawler->filter('nav.nav-menu')->append($dropdown_menu_html->saveHTML());
+      }
+    }
+
+    return $crawler;
+  }
+  
+  public function handleDropdownMenu($crawler, $menu) {
+    $sub_menu_crawler = $crawler->filter('nav a')->eq(0);
+    $clone_sub_menu_crawler = new HtmlPageCrawler($sub_menu_crawler->saveHTML());
+    $parent_menu_title = $menu['title'];
+
+    // parent does not have link
+    $crawler->filter('.w-dropdown-toggle.nav-link div:not(.icon)')->text($parent_menu_title);
+    $crawler->filter('nav.w-dropdown-list')->setInnerHtml('');
+    foreach($menu['below'] as $menu) {
+      $menu_html = $this->handleSingleMenuLink($clone_sub_menu_crawler, $menu);     
+      $crawler->filter('nav.w-dropdown-list')->append($menu_html->saveHTML());
     }
     return $crawler;
   }
 
+  public function handleSingleMenuLink($crawler, $menu) {
+    $link = $menu['url']->toString();
+    $title = $menu['title'];
+    $crawler->setAttribute('href', $link)->setInnerHtml($title);
+    return $crawler;
+  }
+
+  // Instruction from https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Menu!menu.api.php/group/menu/8.2.x#sec_rendering
+  public function getRenderArrayForMenu($menu_name) {
+    $menu_tree = \Drupal::menuTree();
+    // Build the typical default set of menu tree parameters.
+    $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name);
+    // Load the tree based on this set of parameters.
+    $tree = $menu_tree->load($menu_name, $parameters);
+    // Transform the tree using the manipulators you want.
+    $manipulators = array(
+      // Use the default sorting of menu links.
+      array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
+    );
+    $tree = $menu_tree->transform($tree, $manipulators);
+
+    $menu = $menu_tree->build($tree);
+
+    return $menu;
+  }
   /**
    * wrap correct wrapper around individual paragraph
    * to make it quickeditable
@@ -471,18 +523,28 @@ abstract class ClutchBuilder {
   public function setupWrapperForParagraph($crawler, $fields) {
     foreach($fields['value'] as $field_name => $field) {
       if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->count()) {
-        if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'image') {
-          // temporary remove quickedit for image
-          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
-          // $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
-        }elseif ($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type') == 'file'){
-          if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
-            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);  
-          }else {
-            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
-          }
-        }else {
-          $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+        $type = $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('data-type');
+        switch($type) {
+          case 'image':
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url'])->setAttribute('alt', $field['content']['alt']);
+            break;
+
+          case 'file':
+            if($crawler->filter('[data-paragraph-field="'.$field_name.'"]')->getAttribute('href')) {
+              $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', $field['content']['url']);  
+            }else {
+              $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('src', $field['content']['url']);
+            }
+            break;
+
+          case 'link':
+            $field['content']['uri'] = str_replace('internal:/', '', $field['content']['uri']);
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->setAttribute('href', '/'.$field['content']['uri'])->text($field['content']['title']);
+            break;
+
+          default:
+            $crawler->filter('[data-paragraph-field="'.$field_name.'"]')->addClass(QE_CLASS)->setAttribute(QE_FIELD_ID, $field['quickedit'])->removeAttr('data-type')->removeAttr('data-form-type')->removeAttr('data-format-type')->removeAttr('data-paragraph-field')->setInnerHtml($field['content']['value']);
+            break;
         }
       }
     }
@@ -670,12 +732,20 @@ abstract class ClutchBuilder {
 
       switch($field_type) {
         case 'link':
-          $default_value['uri'] = $node->extract(array('href'))[0];
+          $uri = $node->extract(array('href'))[0];
+          if(!strpos($uri, '//')) {
+            $uri = '/' . $uri;
+          }
+          $default_value['uri'] = str_replace('.html', '', $uri);
           $default_value['title'] = $node->extract(array('_text'))[0];
           break;
 
         case 'image':
           $default_value = $node->extract(array('src'))[0];
+          break;
+
+        case 'telephone':
+          $default_value = $node->extract(array('_text'))[0];
           break;
 
         case 'entity_reference_revisions':
