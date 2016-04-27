@@ -133,6 +133,12 @@ class ParagraphBuilder extends ClutchBuilder{
       $field_instance->save();
     }
 
+    if($field['field_type'] == 'file') {
+      $paragraph_bundle = str_replace($bundle . '_', '', $field['field_name']);
+      $handler_settings = $field_instance->setSetting('file_extensions', 'pdf doc docx txt svg');
+      $field_instance->save();
+    }
+
     // Assign widget settings for the 'default' form mode.
      entity_get_form_display('paragraph', $bundle, 'default')
       ->setComponent($field['field_name'], array(
@@ -169,9 +175,15 @@ class ParagraphBuilder extends ClutchBuilder{
             $default_value['uri'] = str_replace('.html', '', $uri);
             $default_value['title'] = $node->extract(array('_text'))[0];
             break;
+          
           case 'image':
             $default_value = $node->extract(array('src'))[0];
             break;
+
+          case 'file':
+            $default_value = $node->extract(array('src'))[0];
+            break;
+
           default:
             $default_value = $node->getInnerHtml();
             break;

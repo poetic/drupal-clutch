@@ -773,6 +773,10 @@ abstract class ClutchBuilder {
           return $this->getFieldsInfoFromTemplateForParagraph($node, $field_name);
           break;
         
+        case 'file':
+          $default_value = $node->extract(array('src'))[0];
+          break;
+
         case 'iframe':
           $default_value['url'] = $node->extract(array('src'))[0];
           $default_value['width'] = $node->extract(array('width'))[0];
@@ -917,7 +921,7 @@ abstract class ClutchBuilder {
     }
 
     foreach($content['fields'] as $field) {
-      if($field['field_type'] == 'image') {
+      if($field['field_type'] == 'image' || $field['field_type'] == 'file') {
         $settings['file_directory'] = $file_directory . '/[date:custom:Y]-[date:custom:m]';
         $uri = drupal_get_path('theme', $theme_name) .'/'. $field['value'];
         if (file_exists($uri) && !is_dir($uri)) {
@@ -935,8 +939,6 @@ abstract class ClutchBuilder {
           );
           $entity->set($field['field_name'], $values);
         }
-      }elseif($field['field_type'] == 'file') {
-        // handle later. file in webflow is href. need an actual file to recognize and upload
       }else {
         $entity->set($field['field_name'], $field['value']);
       }

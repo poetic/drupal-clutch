@@ -168,7 +168,7 @@ class ComponentBuilder extends ClutchBuilder{
 
     if($field['field_type'] == 'file') {
       $paragraph_bundle = str_replace($bundle . '_', '', $field['field_name']);
-      $handler_settings = $field_instance->setSetting('file_extensions', 'pdf doc docx txt');
+      $handler_settings = $field_instance->setSetting('file_extensions', 'pdf doc docx txt svg');
       $field_instance->save();
     }
 
