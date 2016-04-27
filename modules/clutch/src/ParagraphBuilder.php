@@ -162,7 +162,11 @@ class ParagraphBuilder extends ClutchBuilder{
         $field_formatter = $node->extract(array('data-format-type'))[0];
         switch($field_type) {
           case 'link':
-            $default_value['uri'] = $node->extract(array('href'))[0];
+            $uri = $node->extract(array('href'))[0];
+            if(!strpos($uri, '//')) {
+              $uri = '/' . $uri;
+            }
+            $default_value['uri'] = str_replace('.html', '', $uri);
             $default_value['title'] = $node->extract(array('_text'))[0];
             break;
           case 'image':
