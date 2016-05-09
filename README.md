@@ -1,6 +1,6 @@
 #Clutch
-========
-![clutch_logo](https://github.com/poetic/clutch/blob/features/readme/assets/clutch.png)
+
+![clutch_logo](https://github.com/poetic/clutch/blob/features/refactor-find-and-replace/assets/clutch.png)
 
 A super module that will help speeding up website conversion from Webflow design. This repo contains Houston, Clutch, Component, Custom Page.
 
@@ -90,7 +90,7 @@ These are the most common field Types/Form Display/Render Display. You can add m
 
 
 ## Usage
-Recommend to use with [Nebula](https://github.com/poetic/nebula "Nebula") and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project) to install Drupal 8 site.
+Recommend to use with [Nebula](https://github.com/poetic/nebula){:target="_blank"} and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project){:target="_blank"} to install Drupal 8 site.
 
 Assume you already installed Nebula and had a site called drupal.local
 
