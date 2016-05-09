@@ -5,17 +5,19 @@
  * Functions to support theming in the {{themeName}} theme.
  */
 
-use Drupal\clutch\ClutchNodeBuilder;
+use Drupal\clutch\NodeBuilder;
+
 /**
 * Implements hook_preprocess() for component.
 */
 
 function {{themeMachine}}_preprocess_node(&$variables){
   $node = $variables['node'];
-  $nodeBuilder = new ClutchNodeBuilder();
-  $contentTypeName = ($variables['node']->getType());
+  $nodeBuilder = new NodeBuilder();
+  $contentTypeName = $node->getType();
   $content_type = str_replace('_', '-', $contentTypeName);
-  $findAndReplace = $nodeBuilder->findAndReplace($content_type, $node);
-  unset($variables['title_suffix']);
+  $view = $variables['view_mode'];
+  unset($variables['content']);
+  $findAndReplace = $nodeBuilder->findAndReplace($content_type, $node, $view);
   $variables['content']['#markup'] = $findAndReplace;
 }
