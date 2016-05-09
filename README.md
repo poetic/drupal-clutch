@@ -90,7 +90,7 @@ These are the most common field Types/Form Display/Render Display. You can add m
 
 
 ## Usage
-Recommend to use with [Nebula](https://github.com/poetic/nebula){:target="_blank"} and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project){:target="_blank"} to install Drupal 8 site.
+Recommend to use with [Nebula](https://github.com/poetic/nebula) and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project) to install Drupal 8 site.
 
 Assume you already installed Nebula and had a site called drupal.local
 

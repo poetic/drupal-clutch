@@ -41,7 +41,7 @@ So far Component and Custom Block function exactly the same.
 
 ## Difference between 2 workflows
 
-- Have separate modules to handle the creation and rendering. Therefore we can disable the Clutch CLI on production using [Environment](https://www.drupal.org/node/2552677){:target="_blank"} module.
+- Have separate modules to handle the creation and rendering. Therefore we can disable the Clutch CLI on production using [Environment](https://www.drupal.org/node/2552677) module.
 - Use Yaml file to store the structure of the block type.
 - Let theme handle how blocks suppose to be rendered.
 - Reduce complexity and maintenance effort for Clutch.
