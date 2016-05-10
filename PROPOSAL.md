@@ -1,6 +1,6 @@
 #Clutch V2 Proposal
 
-Update Clutch to use Page manager and Drupal Custom Block:
+Update Clutch to use Page manager and Drupal Block:
 
 ## Page Manager
 **Pros**
@@ -15,8 +15,10 @@ Update Clutch to use Page manager and Drupal Custom Block:
 - Does not work with Quickedit
 - Does not support Metatag(this can be solve with hook_form_alter)
 
-## Custom Block
-So far Component and Custom Block function exactly the same.
+## Block
+We can use either Custom Block or Block API.
+- Custom Block functions the same as Content Type. Everything will be stored in database.
+- Block API to build Block Plugin and have it work the same way as Ctools Custom Pane on Drupal 7. There will be no fields store in database.
 
 ## Workflow
 
@@ -46,4 +48,5 @@ So far Component and Custom Block function exactly the same.
 - Let theme handle how blocks suppose to be rendered.
 - Reduce complexity and maintenance effort for Clutch.
 - Stick with Drupal community and Drupal Core.
-- Block and Page manager support Revision so it should work with Deploy module.
+- Custom Block supports Revision so this would work with deploy.
+- Page and Page Variant are config entities so this would be part of CMI.
