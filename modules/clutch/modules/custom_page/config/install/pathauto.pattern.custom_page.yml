@@ -1,4 +1,0 @@
-id: custom_page
-label: 'Custom Page'
-type: 'canonical_entities:custom_page'
-pattern: '[custom_page:name]'

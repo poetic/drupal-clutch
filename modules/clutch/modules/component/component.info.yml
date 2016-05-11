@@ -1,5 +1,0 @@
-name: "Clutch: Component"
-type: module
-description: Create components from yaml file.
-core: 8.x
-package: Clutch
