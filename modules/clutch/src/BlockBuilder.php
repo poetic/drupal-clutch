@@ -229,7 +229,7 @@ class BlockBuilder extends ClutchBuilder{
   public function findAndReplace($template, $block, $view_mode = NULL) {
     $html = parent::findAndReplace($template, $block);
     if(in_array('administrator', \Drupal::currentUser()->getRoles())) {
-      $html = $this->addQuickeditAttributeForBundle($html, $block);
+      // $html = $this->addQuickeditAttributeForBundle($html, $block);
     }
     return $html;
   }

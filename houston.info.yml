@@ -35,6 +35,8 @@ dependencies:
   - node
   - options
   - page_cache
+  - page_manager
+  - page_manager_ui
   - path
   - pathauto
   - paragraphs
