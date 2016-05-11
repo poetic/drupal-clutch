@@ -11,17 +11,10 @@ const QE_CLASS = 'quickedit-field';
 const QE_FIELD_ID = 'data-quickedit-field-id';
 const QE_ENTITY_ID = 'data-quickedit-entity-id';
 
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/Helpers.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPageCrawler.php');
-require_once(dirname(__DIR__).'/libraries/wa72/htmlpagedom/src/HtmlPage.php');
-
-use Drupal\component\Entity\Component;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
-use Drupal\file\Plugin\Field\FieldType\FileItem;
-use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\CssSelector\CssSelector;
 use Wa72\HtmlPageDom\HtmlPageCrawler;
@@ -31,6 +24,7 @@ use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\clutch\MenuBuilder;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\clutch\FormBuilder;
+use Drupal\block_content\Entity\BlockContent;
 
 /**
  * Class ClutchBuilder.
@@ -57,8 +51,8 @@ abstract class ClutchBuilder {
    * Find and replace static value with dynamic value from created content
    *
    * @param $template, $entity, $view_mode
-   *   html string template from component
-   *   component entity
+   *   html string template from block
+   *   block entity
    *   view mode of the entity
    *
    * @return
@@ -75,7 +69,7 @@ abstract class ClutchBuilder {
     // get entity view display for entity.
     $entity_type_id = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
-    if(($entity_type_id == 'component') || ($entity_type_id == 'node' && $view_mode == 'full')) {
+    if(($entity_type_id == 'block_content') || ($entity_type_id == 'node' && $view_mode == 'full')) {
       $view_mode = 'default';
     }
 
@@ -412,7 +406,6 @@ abstract class ClutchBuilder {
     $crawler->filter('img')->each(function (Crawler $node, $i) {
       if($node->filterXpath('//*[@data-field]')->count() == 0) {
         $temp_url = $node->getAttribute('src');
-        // $public_folder = \Drupal::service('stream_wrapper_manager')->getViaUri('public://')->baseUrl();
         $theme_array = $this->getCustomTheme();
         $theme_name = array_keys($theme_array)[0];
         $uri = drupal_get_path('theme', $theme_name);
@@ -654,11 +647,6 @@ abstract class ClutchBuilder {
    *   TODO
    */
   public function createEntitiesFromTemplate($bundles) {
-    //make array if only creating one component (if string passed in)
-    if(!is_array($bundles)) {
-      $val = $bundles;
-      $bundles = array($bundles);
-    }
     foreach($bundles as $bundle) {
       $this->createEntityFromTemplate(str_replace('_', '-', $bundle));
     }
@@ -865,24 +853,6 @@ abstract class ClutchBuilder {
       'value' => $default_value,
     );
   }
-  /**
-   * Find bundles that need to be updated
-   *
-   * @param $bundles
-   *   array of bundles
-   *
-   * @return
-   *   An array bundles that need to be updated
-   */
-  public function getNeedUpdateComponents($bundles) {
-    $need_to_update_bundles = array();
-    foreach($bundles as $bundle => $label) {
-      if($this->verifyIfBundleNeedToUpdate($bundle)) {
-        $need_to_update_bundles[$bundle] = $label;
-      }
-    }
-    return $need_to_update_bundles;
-  }
 
   /**
    * Get front end theme directory
@@ -914,13 +884,13 @@ abstract class ClutchBuilder {
     $theme_name = array_keys($theme_array)[0];
     $file_directory = 'default';
     switch($type) {
-      case 'component':
-        $entity = Component::create([
+      case 'block_content':
+        $entity = BlockContent::create([
           'type' => $content['id'],
-          'name' => ucwords(str_replace('_', ' ', $content['id'])),
+          'info' => ucwords(str_replace('_', ' ', $content['id'])),
         ]);
         $entity->save();
-        $file_directory = 'components/' . str_replace('_', ' ', $content['id']);
+        $file_directory = 'block_contents/' . str_replace('_', ' ', $content['id']);
         break;
 
       case 'paragraph':
