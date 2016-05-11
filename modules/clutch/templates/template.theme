@@ -21,3 +21,9 @@ function {{themeMachine}}_preprocess_node(&$variables){
   $findAndReplace = $nodeBuilder->findAndReplace($content_type, $node, $view);
   $variables['content']['#markup'] = $findAndReplace;
 }
+
+function {{themeMachine}}_theme_suggestions_block_alter(array &$suggestions, array $variables) {
+	$block = $variables['elements']['content']['#block_content'];
+	$bundle = $block->bundle();
+	array_unshift($suggestions, 'block__block_content__' . $bundle);
+}
