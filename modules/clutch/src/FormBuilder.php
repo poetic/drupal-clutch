@@ -10,18 +10,9 @@ namespace Drupal\clutch;
 use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\file\Entity\File;
-use Drupal\file\Plugin\Field\FieldType\FileItem;
-use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\CssSelector\CssSelector;
-use Wa72\HtmlPageDom\HtmlPageCrawler;
 use Drupal\clutch\clutchBuilder;
 use Drupal\contact\Entity\ContactForm;
-use Drupal\clutch\ExampleForm;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
 
 /**
  * Class FormBuilder.
