@@ -20,6 +20,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Drupal\clutch\MenuBuilder;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Class CreateCommand.
@@ -54,13 +55,13 @@ class CreateCommand extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
 
     $io = new DrupalStyle($input, $output);
-    $bundlezip = $input->getOption('zip-file');
-    if(!$bundlezip){
+    $zipFile = $input->getOption('zip-file');
+    if(!$zipFile){
       $helper = $this->getHelper('question');
       $question = new Question('<info>Please enter the name of the zip file:</info> <comment>[webflow]</comment> ', 'webflow');
-      $bundlezip = $helper->ask($input, $output, $question);
+      $zipFile = $helper->ask($input, $output, $question);
     }
-    $withZip = $bundlezip. ".zip";
+    $withZip = $zipFile. ".zip";
     // Theme Name
     $theme = $input->getOption('theme-name');
     if(!$theme){
@@ -68,63 +69,50 @@ class CreateCommand extends Command {
       $question = new Question('<info>Please enter theme name:</info> <comment>[webflow]</comment> ', 'webflow');
       $theme = $helper->ask($input, $output, $question);
     }
-    // Theme Description
-    // $themeDesc = $input->getOption('theme-description');
-    // if(!$themeDesc){
-    //   $helper = $this->getHelper('question');
-    //   $question = new Question('<info>Please enter theme description:</info> <comment>[These is a webflow theme]</comment> ', 'These is a webflow theme');
-    //   $themeDesc = $helper->ask($input, $output, $question);
-    // }
+    
     $themeDesc = 'These is a webflow theme';
-    $path = getcwd().'/temp';
+    
+    $tempPath = getcwd().'/temp';
+
     $zip = new ZipArchive;
     if ($zip->open($withZip) === TRUE) {
-      $zip->extractTo($path);
+      $zip->extractTo($tempPath);
       $zip->close();
       $output->writeln('<info>Starting Theme creation process</info>');
     } else {
       $output->writeln('<comment>Failed to open the archive!</comment>');
       return false;
     }
-    $directory = "{$path}/{$bundlezip}/";
-    $htmlfiles = glob($directory . "*.html");
-    $themeMachine = strtolower(str_replace(" ","_",$theme));
-    $Root = getcwd().'/themes';
-    $themeDir = "{$Root}/{$theme}";
-    $create = new ClutchCli;
-    $output = new ConsoleOutput();
-    $output->setFormatter(new OutputFormatter(true));
-    $rows = 8;
-    $progressBar = new ProgressBar($output, $rows);
-    $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%');
-    $progressBar->setBarCharacter('<fg=magenta>=</>');
-    $progressBar->setProgressCharacter("\xF0\x9F\x8F\x83");
-    $progressBar->setOverwrite(true);
 
-    for ($i = 0; $i<$rows; $i++) {
-      $create->Components($themeDir,$theme,$htmlfiles,'data-block','blocks');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-node','nodes');
-      $create->Components($themeDir,$theme,$htmlfiles,'data-menu','menus');
-      $progressBar->advance(2);
-      $create->Directory($path,$Root,$themeDir,$theme,$bundlezip);
-      $progressBar->advance();
-      $vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $themeMachine,'{{themeDescription}}'=> $themeDesc);
-      $progressBar->advance();
-      $create->ThemeTemplates($themeDir,$theme, $vars);
-      $progressBar->advance();
-      $create->deleteDirectory($path);
-      $progressBar->advance();
-      \Drupal::service('theme_handler')->rebuildThemeData();
-      $progressBar->advance();
-      \Drupal::service('theme_handler')->reset();
-      \Drupal::service('theme_handler')->refreshInfo();
-      \Drupal::service('theme_handler')->listInfo();
-      // $this->getChain()->addCommand('cache:rebuild', ['cache' => 'all']);
-      // $this->getChain()->addCommand('clutch:sync', ['theme' => $theme]);
-      $progressBar->advance();
-      $output->writeln('<comment>'. "\r\n" .'Your theme '.$theme.' is now created.</comment>');
-      return true;
+    $extract_webflow_dir = "$tempPath/$zipFile/";
+
+    $htmlfiles = array();
+
+    $finder = new Finder();
+    $finder->files()->name('*.html')->in($extract_webflow_dir);
+    foreach ($finder as $file) {
+      $htmlfiles[] = $file->getRealpath();
     }
-    $progressBar->finish();
+    $theme_machine_name = strtolower(str_replace(" ","_",$theme));
+    $root = getcwd();
+    $themeDir = "$root/themes/$theme_machine_name/";
+    if(!file_exists($themeDir)) {
+      mkdir($themeDir, 0777);
+    }
+    $clutchCLI = new ClutchCli();
+    $drupal_types = array('block', 'node', 'menu', 'form');
+    $folders_to_copy = array('blocks','nodes', 'menus', 'forms', 'css', 'js', 'fonts', 'images');
+    foreach($drupal_types as $type) {
+      $clutchCLI->Components($extract_webflow_dir, $themeDir, $theme_machine_name, $htmlfiles , $type);      
+    }
+    $clutchCLI->copyWebflowFilesToTheme($extract_webflow_dir, $themeDir, $theme_machine_name, $folders_to_copy);
+    $theme_vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $theme_machine_name,'{{themeDescription}}'=> $themeDesc);
+    $clutchCLI->generateThemeTemplates($themeDir, $theme_vars);
+    $clutchCLI->deleteDirectory($tempPath);
+    \Drupal::service('theme_handler')->rebuildThemeData();
+    \Drupal::service('theme_handler')->reset();
+    \Drupal::service('theme_handler')->refreshInfo();
+    \Drupal::service('theme_handler')->listInfo();  
+    $output->writeln('<comment>'. "\r\n" .'Your theme '.$theme.' is now created.</comment>');      
   }
 }

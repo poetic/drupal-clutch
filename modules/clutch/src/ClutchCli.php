@@ -9,6 +9,9 @@ namespace Drupal\clutch;
 
 use DOMDocument;
 use DOMXPath;
+use Wa72\HtmlPageDom\HtmlPageCrawler;
+use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml\Dumper;
 
 /**
  * Class ClutchCli.
@@ -73,127 +76,77 @@ class ClutchCli {
       rmdir($dirPath);
     }
   }
-
-  function Directory($path,$Root,$themeDir,$theme,$bundlezip){
-    $cssDir = "{$path}/{$bundlezip}/css";
-    $jsDir = "{$path}/{$bundlezip}/js";
-    $fontDir = "{$path}/{$bundlezip}/fonts";
-    $imgDir = "{$path}/{$bundlezip}/images";
-    $themecss = "{$Root}/{$theme}/css";
-    $themejs = "{$Root}/{$theme}/js";
-    $themefont = "{$Root}/{$theme}/fonts";
-    $themeimg = "{$Root}/{$theme}/images";
-    $tempInfo = __DIR__.'/../templates';
-
-    // Move files from zip to new theme.
-    if(!$cssDir){
-      $output->writeln('<comment>Failed to find CSS folder. make sure you are using the webflow zip</comment>');
-      return false;
-    }else{
-      $css = opendir($cssDir);
-      while(false !== ( $file = readdir($css)) ) {
-        if ( substr($file, -12) == '.webflow.css'){
-          rename( $cssDir.'/'.$file, $cssDir.'/'.$theme.substr($file, -12));
+  function copyWebflowFilesToTheme($tempDir, $themeDir, $theme, $folders_to_copy) {
+    foreach($folders_to_copy as $folder) {
+      $folderPath = $tempDir.$folder;
+      if(!opendir($folderPath)) {
+        $output->writeln("<comment>Failed to find $folder folder. make sure you are using the webflow zip</comment>");
+        return FALSE;
+      }
+      if($folder == 'css') {
+        $css = opendir($folderPath);
+        while(false !== ( $file = readdir($css)) ) {
+          if ( substr($file, -12) == '.webflow.css'){
+            rename( $folderPath.'/'.$file, $folderPath.'/'.$theme.substr($file, -12));
+          }
         }
       }
       // Move files from zip rename with theme name.
-      $this->recurse_copy($cssDir,$themecss);
+      $this->recurse_copy($tempDir . $folder, $themeDir . $folder);
     }
-    if(!$jsDir){
-      $output->writeln('<comment>Failed to find JS folder. make sure you are using the webflow zip</comment>');
-      return false;
-    }else{
-      $this->recurse_copy($jsDir,$themejs);
+  }
+  function generateThemeTemplates($themeDir, $theme_vars) {
+    $templatesPath = getcwd() . '/' . drupal_get_path('module', 'clutch') .'/templates/';
+    $templates = array('info.yml', 'libraries.yml', 'template.theme');
+    foreach($templates as $file) {
+      $content = file_get_contents($templatesPath . $file);
+      $content = $this->replace_tags($content, $theme_vars);
+      if($file == 'template.theme') {
+        file_put_contents($themeDir.'/'.$theme_vars['{{themeMachine}}'].'.theme', $content);
+      }else {
+        file_put_contents($themeDir.'/'.$theme_vars['{{themeMachine}}'].".$file", $content);
+      }
     }
-    if(!$imgDir){
-      $output->writeln('<comment>Failed to find Images folder. make sure you are using the webflow zip</comment>');
-      return false;
-    }else{
-      $this->recurse_copy($imgDir,$themeimg);
-    }
-
-    $this->recurse_copy($tempInfo,$themeDir);
-    rename($themeDir.'/info.yml',$themeDir.'/'.$theme.'.info.yml');
-    rename($themeDir.'/libraries.yml',$themeDir.'/'.$theme.'.libraries.yml');
-    rename($themeDir.'/template.theme',$themeDir.'/'.$theme.'.theme');
   }
 
-  function ThemeTemplates($themeDir,$theme, $vars){
-    $template = file_get_contents($themeDir.'/'.$theme.'.info.yml', true);
-    $infoYML = $this->replace_tags($template, $vars);
-    file_put_contents($themeDir.'/'.$theme.'.info.yml', $infoYML);
-
-    $template = file_get_contents($themeDir.'/'.$theme.'.libraries.yml', true);
-    $infoYML = $this->replace_tags($template, $vars);
-    file_put_contents($themeDir.'/'.$theme.'.libraries.yml', $infoYML);
-
-    $template = file_get_contents($themeDir.'/'.$theme.'.theme', true);
-    $infoYML = $this->replace_tags($template, $vars);
-    file_put_contents($themeDir.'/'.$theme.'.theme', $infoYML);
-  }
-
-  function Components($themeDir,$theme,$htmlfiles,$dataBundle,$bundle){
+  function Components($temp_folder, $themeDir, $theme, $htmlfiles, $bundle){
     $files = array();
-    foreach($htmlfiles as &$file){
-      $bundle_file_name = basename($file,".html");
-      // echo $bundle_file_name."\r\n";
+    $temp_bundle_folder = $temp_folder . $bundle . 's/'; 
+    if(!file_exists($temp_bundle_folder)) {
+      mkdir($temp_bundle_folder);
+    }
+
+    foreach($htmlfiles as $file){
+      $file_name = basename($file,".html");
+      $page[$file_name] = array();
+      $page_machine_name = str_replace('-', '_', $file_name);
       $html = file_get_contents($file);
-      $extracted_info = array(); //array to save all the info in just one array [data-component, data-field, div]
-      //Extract data-component and store it to $bundle_names
-      $data_bundles = explode($dataBundle.'="', $html);
-      $bundle_names = array();
-      foreach ($data_bundles as &$data_bundle) {
-        $data_bundle = substr($data_bundle, 0, strpos($data_bundle, '"'));
-        array_push($bundle_names, $data_bundle);
-      }
-      $doc = new DOMDocument;
-      @$doc->loadHTML($html);
-      $xpath = new DOMXPath($doc);
-      for ($i = 1; $i < count($bundle_names); $i++) { //Search for each data-component found
-        // echo $bundle_names[$i];
-        $result = '';
-        $query = '//*[@'.$dataBundle.'="' . $bundle_names[$i] . '"]/node()/..';
-        $node = $xpath->evaluate($query);
-        foreach ($node as $childNode) {
-          $result .= $doc->saveHtml($childNode); //store the div block to result line by line;
+      $crawler = new HtmlPageCrawler($html);
+      $crawler->filterXPath("//*[@data-$bundle]")->each(function(HtmlPageCrawler $node, $i) use ($bundle, $temp_bundle_folder, &$page, $file_name) {
+        $data_bundle = $node->getAttribute("data-$bundle");
+        switch($bundle) {
+          case 'block':
+            $template = $temp_bundle_folder . 'block--block-content--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+            $page[$file_name][] = $data_bundle;
+            break;
+          case 'node':
+            $template = $temp_bundle_folder . 'node--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+            break;
+          case 'form':
+            $template = $temp_bundle_folder . 'form--contact-message--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+            break;
+          case 'menu':
+            $template = $temp_bundle_folder . $data_bundle . '.html.twig';
+            break;
         }
-        $bundle_names[$i] =  str_replace('_', '-', $bundle_names[$i]);
-        $temp = array($bundle_names[$i], $result);
-        array_push($extracted_info, $temp);
-      }
-      $extracted_node = array(); //array to save all the info in just one array [data-component, data-field, div]
-      //Extract data-component and store it to $bundle_names
-      //Generate files
-      $html_filename = basename($file);
-      $html_filename = str_replace('.html', '', $html_filename);
-      $theme_components = $themeDir."/".$bundle."/";
-      $yamls = $themeDir."/";
-      // var_dump($bundle_names);
-      if (!file_exists($theme_components)) {
-        mkdir($theme_components, 0777, true);
-      }
-      if($bundle == 'blocks'){
-        $page = $yamls.$bundle.'.yml';
-        if(0 < count($bundle_names)){
-          $pageBundle = str_replace('-', '_', $bundle_file_name) . ":\r\n";
-          for ($j = 1; $j < count($bundle_names); $j++) {
-            $bundle_names[$j] = str_replace('-', '_', $bundle_names[$j]);
-            $pageBundle .= '  - ' . $bundle_names[$j] . "\r\n";
-          }
+        if(!file_exists($template)) {
+          file_put_contents($template, $node->saveHTML());
         }
-        file_put_contents($page, $pageBundle, FILE_APPEND);
-      }
+      });
 
-
-      foreach ($extracted_info as &$info) {
-        if (!file_exists($theme_components . $info[0] )) {
-          mkdir($theme_components . $info[0] , 0777, true);
-        }
-        $filename = $theme_components . $info[0] . '/' . $info[0] . '.html.twig';
-        $created = $bundle.'/'.$info[0] . '/' . $info[0] . '.html.twig';
-        file_put_contents($filename, $info[1]);
-        echo $created. "\r\n";
-      }
+      $dumper = new Dumper();
+      $yaml = $dumper->dump($page, 2);
+      file_put_contents($themeDir . '/blocks.yml', $yaml, FILE_APPEND);
     }
   }
 }

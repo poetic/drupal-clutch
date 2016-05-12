@@ -137,11 +137,9 @@ class PageCommand extends Command {
       }
     }
 
-
     \Drupal::service('theme_installer')->install([$theme]);
     \Drupal::service('theme_handler')->setDefault($theme);
-    // $this->getChain()->addCommand('theme:install', ['theme' => '']);
-    // $ClutchAPIForm = new ClutchAPIForm;
+    
     $Root = getcwd().'/themes';
     $themeDir = "{$Root}/{$theme}";
     $blocks_dir = scandir($themeDir . '/blocks/');
