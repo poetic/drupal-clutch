@@ -146,7 +146,7 @@ class PageCommand extends Command {
     $bundles_from_theme_directory = array();
     foreach ($blocks_dir as $dir) {
       if (strpos($dir, '.') !== 0) {
-        $bundles_from_theme_directory[] = str_replace('-', '_', $dir);
+        $bundles_from_theme_directory[] = $dir;
       }
     }
 

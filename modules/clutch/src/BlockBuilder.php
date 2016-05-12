@@ -32,7 +32,7 @@ class BlockBuilder extends ClutchBuilder{
     // $template name has the same name of directory that holds the template
     // pass null array to pass validation. we don't need to replace any variables. this only return 
     // the html string to we can parse and handle it
-    return $this->twig_service->loadTemplate($theme_path.'/blocks/'.$template.'/'.$template.'.html.twig')->render(array());
+    return $this->twig_service->loadTemplate($theme_path.'/blocks/'.$template)->render(array());
   }
 
   /**

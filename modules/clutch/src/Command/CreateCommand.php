@@ -100,12 +100,9 @@ class CreateCommand extends Command {
       mkdir($themeDir, 0777);
     }
     $clutchCLI = new ClutchCli();
-    $drupal_types = array('block', 'node', 'menu', 'form');
     $folders_to_copy = array('blocks','nodes', 'menus', 'forms', 'css', 'js', 'fonts', 'images');
-    foreach($drupal_types as $type) {
-      $clutchCLI->Components($extract_webflow_dir, $themeDir, $theme_machine_name, $htmlfiles , $type);      
-    }
-    $clutchCLI->copyWebflowFilesToTheme($extract_webflow_dir, $themeDir, $theme_machine_name, $folders_to_copy);
+    $clutchCLI->traverseFiles($extract_webflow_dir, $themeDir, $theme_machine_name, $htmlfiles);
+    $clutchCLI->copyWebflowFilesToTheme($extract_webflow_dir, $themeDir, $theme_machine_name, $folders_to_copy, $output);
     $theme_vars = array('{{themeName}}'=> $theme,'{{themeMachine}}'=> $theme_machine_name,'{{themeDescription}}'=> $themeDesc);
     $clutchCLI->generateThemeTemplates($themeDir, $theme_vars);
     $clutchCLI->deleteDirectory($tempPath);

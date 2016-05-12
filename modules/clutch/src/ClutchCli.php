@@ -76,7 +76,7 @@ class ClutchCli {
       rmdir($dirPath);
     }
   }
-  function copyWebflowFilesToTheme($tempDir, $themeDir, $theme, $folders_to_copy) {
+  function copyWebflowFilesToTheme($tempDir, $themeDir, $theme, $folders_to_copy, $output) {
     foreach($folders_to_copy as $folder) {
       $folderPath = $tempDir.$folder;
       if(!opendir($folderPath)) {
@@ -109,44 +109,54 @@ class ClutchCli {
     }
   }
 
-  function Components($temp_folder, $themeDir, $theme, $htmlfiles, $bundle){
-    $files = array();
+  function traverseFiles($temp_folder, $themeDir, $theme, $htmlfiles){
+    $pages = array();
+    foreach($htmlfiles as $file){
+      $file_name = basename($file,".html");
+      $page_machine_name = str_replace('-', '_', $file_name);
+      $pages[$page_machine_name] = array();
+      $this->generateComponents($temp_folder, $themeDir, $theme, $file, $pages, $page_machine_name);
+    }
+    $dumper = new Dumper();
+    $yaml = $dumper->dump($pages, 2);
+    file_put_contents($themeDir . '/blocks.yml', $yaml, FILE_APPEND);
+  }
+
+  function generateComponents($temp_folder, $themeDir, $theme, $file, &$pages, $page_machine_name) {
+    $drupal_types = array('block', 'node', 'menu', 'form');
+    foreach($drupal_types as $type) {
+      $this->generateComponent($temp_folder, $themeDir, $theme, $file, $pages, $page_machine_name, $type);
+    }
+  }
+
+  function generateComponent($temp_folder, $themeDir, $theme, $file, &$pages, $page_machine_name, $bundle) {
     $temp_bundle_folder = $temp_folder . $bundle . 's/'; 
     if(!file_exists($temp_bundle_folder)) {
       mkdir($temp_bundle_folder);
     }
 
-    foreach($htmlfiles as $file){
-      $file_name = basename($file,".html");
-      $page[$file_name] = array();
-      $page_machine_name = str_replace('-', '_', $file_name);
-      $html = file_get_contents($file);
-      $crawler = new HtmlPageCrawler($html);
-      $crawler->filterXPath("//*[@data-$bundle]")->each(function(HtmlPageCrawler $node, $i) use ($bundle, $temp_bundle_folder, &$page, $file_name) {
-        $data_bundle = $node->getAttribute("data-$bundle");
-        switch($bundle) {
-          case 'block':
-            $template = $temp_bundle_folder . 'block--block-content--' . str_replace('_', '-', $data_bundle) . '.html.twig';
-            $page[$file_name][] = $data_bundle;
-            break;
-          case 'node':
-            $template = $temp_bundle_folder . 'node--' . str_replace('_', '-', $data_bundle) . '.html.twig';
-            break;
-          case 'form':
-            $template = $temp_bundle_folder . 'form--contact-message--' . str_replace('_', '-', $data_bundle) . '.html.twig';
-            break;
-          case 'menu':
-            $template = $temp_bundle_folder . $data_bundle . '.html.twig';
-            break;
-        }
-        if(!file_exists($template)) {
-          file_put_contents($template, $node->saveHTML());
-        }
-      });
-
-      $dumper = new Dumper();
-      $yaml = $dumper->dump($page, 2);
-      file_put_contents($themeDir . '/blocks.yml', $yaml, FILE_APPEND);
-    }
+    $html = file_get_contents($file);
+    $crawler = new HtmlPageCrawler($html);
+    $crawler->filterXPath("//*[@data-$bundle]")->each(function(HtmlPageCrawler $node, $i) use ($bundle, $temp_bundle_folder, &$pages, $page_machine_name) {
+      $data_bundle = $node->getAttribute("data-$bundle");
+      switch($bundle) {
+        case 'block':
+          $template = $temp_bundle_folder . 'block--block-content--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+          $pages[$page_machine_name][] = $data_bundle;
+          break;
+        case 'node':
+          $template = $temp_bundle_folder . 'node--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+          break;
+        case 'form':
+          $template = $temp_bundle_folder . 'form--contact-message--' . str_replace('_', '-', $data_bundle) . '.html.twig';
+          break;
+        case 'menu':
+          $template = $temp_bundle_folder . $data_bundle . '.html.twig';
+          break;
+      }
+      if(!file_exists($template)) {
+        file_put_contents($template, $node->saveHTML());
+      }
+    });
   }
 }

@@ -22,9 +22,7 @@ use Drupal\contact\Entity\ContactForm;
 class FormBuilder extends ClutchBuilder{
 
   public function getHTMLTemplate($template) {
-    $theme_array = $this->getCustomTheme();
-    $theme_path = array_values($theme_array)[0];
-    return $this->twig_service->loadTemplate($theme_path.'/components/'.$template.'/'.$template.'.html.twig')->render(array());
+  
   }
 
   public function collectFieldValues($entity, $field_definition) {
