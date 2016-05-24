@@ -22,4 +22,5 @@
 	- Forms
 	- Tabs
 - [ ] Convention >< Config
+- [ ] Deploy with S3FS
 - [ ] Updates!
