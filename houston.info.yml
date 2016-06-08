@@ -37,6 +37,7 @@ dependencies:
   - page_cache
   - page_manager
   - page_manager_ui
+  - panels
   - path
   - pathauto
   - paragraphs
@@ -53,7 +54,6 @@ dependencies:
   - tour
   - views
   - views_ui
-  - clutch
 themes:
   - classy
   - seven
