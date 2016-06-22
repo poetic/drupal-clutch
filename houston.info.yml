@@ -28,7 +28,7 @@ dependencies:
   - history
   - iframe
   - image
-  - linked_field
+  - link_class
   - linkit
   - menu_link_content
   - menu_ui
