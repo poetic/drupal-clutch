@@ -110,8 +110,3 @@ projects[token][version] = "1.0-alpha2"
 
 projects[views_load_more][subdir] = "contrib"
 projects[views_load_more][version] = "1.x-dev"
-
-projects[views_filter_autosubmit][subdir] = "custom"
-projects[views_filter_autosubmit][download][type] = "zip"
-projects[views_filter_autosubmit][download][url] = "https://www.drupal.org/files/issues/views_filter_autosubmit_0.zip"
-projects[views_filter_autosubmit][version] = "1.0"
