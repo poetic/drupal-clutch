@@ -43,9 +43,6 @@ projects[geocoder][version] = "2.0-alpha4"
 projects[geofield][subdir] = "contrib"
 projects[geofield][version] = "1.0-alpha2"
 
-projects[geophp][subdir] = "contrib"
-projects[geophp][version] = "1.0-beta1"
-
 projects[iframe][subdir] = "contrib"
 projects[iframe][version] = "1.5"
 
@@ -80,7 +77,7 @@ projects[page_manager][version] = "1.0-alpha23"
 projects[page_manager][patch][0] = "https://www.drupal.org/files/issues/page-manager-contextual-temp.patch"
 
 projects[panels][subdir] = "contrib"
-projects[panels][version] = "3.0-beta4"
+projects[panels][version] = "3.x-dev"
 
 projects[paragraphs][subdir] = "contrib"
 projects[paragraphs][version] = "1.0-rc5"
