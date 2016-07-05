@@ -85,6 +85,9 @@ projects[paragraphs][version] = "1.0-rc5"
 projects[pathauto][subdir] = "contrib"
 projects[pathauto][version] = "1.0-alpha3"
 
+projects[rabbit_hole][subdir] = "contrib"
+projects[rabbit_hole][version] = "1.x-dev"
+
 projects[redirect][type] = module
 projects[redirect][subdir] = "contrib"
 projects[redirect][download][type] = git
@@ -109,4 +112,9 @@ projects[token][subdir] = "contrib"
 projects[token][version] = "1.0-alpha2"
 
 projects[views_load_more][subdir] = "contrib"
-projects[views_load_more][version] = "1.x-dev"
+projects[views_load_more][download][branch] = "1.x-dev"
+projects[views_load_more][download][revision] = "178d321"
+projects[views_load_more][download][type] = "git"
+
+projects[xmlsitemap][subdir] = "contrib"
+projects[xmlsitemap][version] = "1.0-alpha2"
