@@ -17,6 +17,9 @@ projects[bg_image_formatter][version] = "1.x-dev"
 projects[coffee][subdir] = "contrib"
 projects[coffee][version] = "1.0-beta1"
 
+projects[composer_manager][subdir] = "contrib"
+projects[composer_manager][version] = "1.x-dev"
+
 projects[contact_storage][subdir] = "contrib"
 projects[contact_storage][version] = "1.0-beta4"
 
