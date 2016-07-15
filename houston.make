@@ -80,7 +80,9 @@ projects[page_manager][version] = "1.0-alpha23"
 projects[page_manager][patch][0] = "https://www.drupal.org/files/issues/page-manager-contextual-temp.patch"
 
 projects[panels][subdir] = "contrib"
-projects[panels][version] = "3.x-dev"
+projects[panels][download][branch] = "3.x-dev"
+projects[panels][download][revision] = "a5400d7"
+projects[panels][download][type] = "git"
 
 projects[paragraphs][subdir] = "contrib"
 projects[paragraphs][version] = "1.0-rc5"
@@ -118,6 +120,7 @@ projects[views_load_more][subdir] = "contrib"
 projects[views_load_more][download][branch] = "1.x-dev"
 projects[views_load_more][download][revision] = "178d321"
 projects[views_load_more][download][type] = "git"
+projects[views_load_more][patch][0] = "https://www.drupal.org/files/issues/views-load-more-pager-class-2543714-02.patch"
 
 projects[xmlsitemap][subdir] = "contrib"
 projects[xmlsitemap][version] = "1.0-alpha2"
