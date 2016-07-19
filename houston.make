@@ -3,7 +3,7 @@ core = 8.x
 api = 2
 
 ; Core
-projects[drupal][patch][0] = "https://www.drupal.org/files/issues/2635712-14.patch"
+projects[drupal][patch][0] = "https://www.drupal.org/files/issues/2635712-20.patch"
 ; Modules
 projects[address][subdir] = "contrib"
 projects[address][version] = "1.0-beta3"
