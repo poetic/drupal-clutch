@@ -46,6 +46,9 @@ projects[geocoder][version] = "2.0-alpha4"
 projects[geofield][subdir] = "contrib"
 projects[geofield][version] = "1.0-alpha2"
 
+projects[honeypot][subdir] = "contrib"
+projects[honeypot][version] = "1.23"
+
 projects[iframe][subdir] = "contrib"
 projects[iframe][version] = "1.5"
 
@@ -89,6 +92,12 @@ projects[paragraphs][version] = "1.0-rc5"
 
 projects[pathauto][subdir] = "contrib"
 projects[pathauto][version] = "1.0-alpha3"
+
+projects[purge][subdir] = "contrib"
+projects[purge][version] = "3.0-beta4"
+
+projects[purge_purger_http][subdir] = "contrib"
+projects[purge_purger_http][version] = "1.0-beta3"
 
 projects[rabbit_hole][subdir] = "contrib"
 projects[rabbit_hole][version] = "1.x-dev"
