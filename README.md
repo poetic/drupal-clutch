@@ -2,17 +2,17 @@
 
 ![clutch_logo](https://github.com/poetic/clutch/blob/features/refactor-find-and-replace/assets/clutch.png)
 
-A super module that will help speeding up website conversion from Webflow design. This repo contains Houston, Clutch, Component, Custom Page.
+A super module that will speed up website conversion from Webflow design. This repo contains Houston, Clutch, Component, Custom Page.
 
 ## Houston
 An opinionated install profile focused on developer happiness.
 
 ## Component
-Custom entity with bundles support. Use this module to create singleton entity for each bundle type.
+Custom entity with bundles support. Use this module to create a singleton entity for each bundle type.
 
 ## Custom Page (Page)
 Custom Page allows you to create pages as a replacement for Page Manger.
-	
+
 	- Pathauto Support
 	- Token Support
 	- Metatag Support
@@ -21,7 +21,7 @@ Custom Page allows you to create pages as a replacement for Page Manger.
 This module will handle the creation of the Drupal site based on the Webflow design.
 
 ## Data Attribute Instruction
-This workflow rely heavily on data attributes from templates. Developers should help Designers adding these attributes directly into Webflow.
+This workflow relies heavily on data attributes from templates. Developers should help Designers add these attributes directly into Webflow.
 
 ### How to add data attribute
 
@@ -48,10 +48,10 @@ After adding data attributes, it should become:
 	</div>
 
 #### data-component
-**_data-component_** defines component type. Clutch CLI will read html files from Webflow zip and break into small components inside of theme.
+**_data-component_** defines component type. Clutch CLI will read html files from a Webflow zip and break them into small components inside of theme.
 
 #### data-field
-**_data-field_** defines field name. Each field name will be prefixed *data-component* to prevent conflict. *Make sure the field name does not exceed 32 characters(included data-component)*
+**_data-field_** defines field name. Each field name will be prefixed with *data-component* to prevent conflict. *Make sure the field name does not exceed 32 characters(including data-component)*
 
 #### data-type
 **_data-type_** defines field type
@@ -60,7 +60,7 @@ After adding data attributes, it should become:
 **_data-form-type_** defines the edit format of the field.
 
 #### data-format-type
-**_data-form-type_** defines the render format of the field.
+**_data-format-type_** defines the render format of the field.
 
 Besides these main data-attributes, we also have:
  - **_data-node_** to define content type.
@@ -69,7 +69,7 @@ Besides these main data-attributes, we also have:
  - **_data-form_** to define form type.
  - **_data-menu_** to define menu.
 
-These are the most common field Types/Form Display/Render Display. You can add more if need.
+These are the most common Field Types/Form Display/Render Display. You can add more if need.
 
 | Field Type                                          | Form Display                | Display                      |
 | ----------------------------------------------------|-----------------------------|------------------------------|
@@ -90,11 +90,11 @@ These are the most common field Types/Form Display/Render Display. You can add m
 
 
 ## Usage
-Recommend to use with [Nebula](https://github.com/poetic/nebula) and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project) to install Drupal 8 site.
+We recommend you use [Nebula](https://github.com/poetic/nebula) and [Composer template for Drupal Projects](https://github.com/poetic/drupal-project) to install your Drupal 8 site.
 
-Assume you already installed Nebula and had a site called drupal.local
+Assuming you already installed Nebula and had a site called drupal.local:
 
-Download zip file from Webflow and put it inside drupal/web. At this point, zip file should contain html files with [data attributes](#data-attribute-instruction).
+Download the zip file from Webflow and put it inside drupal/web. At this point, the zip file should contain html files with [data attributes](#data-attribute-instruction).
 
 Go to nebula root level and follow these steps
 
