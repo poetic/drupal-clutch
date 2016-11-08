@@ -26,7 +26,6 @@ dependencies:
   - file
   - help
   - history
-  - iframe
   - image
   - link_class
   - linkit
