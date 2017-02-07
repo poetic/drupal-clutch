@@ -116,7 +116,9 @@ projects[simple_sitemap][subdir] = "contrib"
 projects[simple_sitemap][version] = "2.2"
 
 projects[special_menu_items][subdir] = "contrib"
-projects[special_menu_items][version] = "1.0"
+projects[special_menu_items][download][branch] = "1.x-dev"
+projects[special_menu_items][download][revision] = "ee6c072"
+projects[special_menu_items][download][type] = "git"
 
 projects[token][subdir] = "contrib"
 projects[token][version] = "1.0-beta2"
