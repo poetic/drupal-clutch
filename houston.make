@@ -68,7 +68,7 @@ projects[linkit][subdir] = "contrib"
 projects[linkit][version] = "5.0-beta3"
 
 projects[metatag][subdir] = "contrib"
-projects[metatag][version] = "1.0-beta11"
+projects[metatag][version] = "1.0-beta9"
 
 projects[migrate_plus][subdir] = "contrib"
 projects[migrate_plus][version] = "2.x-dev"
