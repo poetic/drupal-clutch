@@ -9,33 +9,31 @@ projects[address][subdir] = "contrib"
 projects[address][version] = "1.0-beta3"
 
 projects[admin_toolbar][subdir] = "contrib"
-projects[admin_toolbar][version] = "1.15"
+projects[admin_toolbar][version] = "1.17"
 
 projects[bg_image_formatter][subdir] = "contrib"
 projects[bg_image_formatter][version] = "1.x-dev"
 
 projects[coffee][subdir] = "contrib"
-projects[coffee][version] = "1.0-beta1"
+projects[coffee][version] = "1.0-beta2"
 
 projects[composer_manager][subdir] = "contrib"
 projects[composer_manager][version] = "1.x-dev"
 
 projects[contact_storage][subdir] = "contrib"
-projects[contact_storage][version] = "1.0-beta4"
+projects[contact_storage][version] = "1.0-beta8"
 
 projects[ctools][subdir] = "contrib"
-projects[ctools][version] = "3.0-alpha26"
+projects[ctools][version] = "3.0-alpha27"
 
 projects[devel][subdir] = "contrib"
-projects[devel][download][branch] = "1.x-dev"
-projects[devel][download][revision] = "c0b5c5f"
-projects[devel][download][type] = "git"
+projects[devel][version] = "1.0-alpha1"
 
 projects[ds][subdir] = "contrib"
 projects[ds][version] = "2.3"
 
 projects[entity_reference_revisions][subdir] = "contrib"
-projects[entity_reference_revisions][version] = "1.0-rc7"
+projects[entity_reference_revisions][version] = "1.0"
 
 projects[fb_likebox][subdir] = "contrib"
 projects[fb_likebox][version] = "2.0"
@@ -53,10 +51,10 @@ projects[iframe][subdir] = "contrib"
 projects[iframe][version] = "1.5"
 
 projects[imce][subdir] = "contrib"
-projects[imce][version] = "1.0"
+projects[imce][version] = "1.2"
 
 projects[layout_plugin][subdir] = "contrib"
-projects[layout_plugin][version] = "1.0-alpha22"
+projects[layout_plugin][version] = "1.0-alpha23"
 
 projects[leaflet][subdir] = "contrib"
 projects[leaflet][version] = "1.0-alpha1"
@@ -64,13 +62,13 @@ projects[leaflet][patch][0] = "https://www.drupal.org/files/issues/leaflet-fix_i
 projects[leaflet][patch][1] = "https://www.drupal.org/files/issues/leaflet-remove_geophp_load_call-2731917-2.patch"
 
 projects[link_class][subdir] = "contrib"
-projects[link_class][version] = "1.0"
+projects[link_class][version] = "1.1"
 
 projects[linkit][subdir] = "contrib"
-projects[linkit][version] = "4.1"
+projects[linkit][version] = "5.0-beta3"
 
 projects[metatag][subdir] = "contrib"
-projects[metatag][version] = "1.0-beta9"
+projects[metatag][version] = "1.0-beta11"
 
 projects[migrate_plus][subdir] = "contrib"
 projects[migrate_plus][version] = "2.x-dev"
@@ -88,10 +86,10 @@ projects[panels][download][revision] = "a5400d7"
 projects[panels][download][type] = "git"
 
 projects[paragraphs][subdir] = "contrib"
-projects[paragraphs][version] = "1.0-rc5"
+projects[paragraphs][version] = "1.0"
 
 projects[pathauto][subdir] = "contrib"
-projects[pathauto][version] = "1.0-alpha3"
+projects[pathauto][version] = "1.0-beta1"
 
 projects[purge][subdir] = "contrib"
 projects[purge][version] = "3.0-beta4"
@@ -118,12 +116,10 @@ projects[simple_sitemap][subdir] = "contrib"
 projects[simple_sitemap][version] = "2.2"
 
 projects[special_menu_items][subdir] = "contrib"
-projects[special_menu_items][download][branch] = "1.x-dev"
-projects[special_menu_items][download][revision] = "ee6c072"
-projects[special_menu_items][download][type] = "git"
+projects[special_menu_items][version] = "1.0"
 
 projects[token][subdir] = "contrib"
-projects[token][version] = "1.0-alpha2"
+projects[token][version] = "1.0-beta2"
 
 projects[views_load_more][subdir] = "contrib"
 projects[views_load_more][download][branch] = "1.x-dev"
