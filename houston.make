@@ -57,7 +57,7 @@ projects[migrate_plus][download][revision] = "586c617"
 projects[migrate_plus][download][type] =" git"
 
 projects[migrate_tools][subdir] = "contrib"
-projects[migrate_toos][download][branch] = "3.x-dev"
+projects[migrate_tools][download][branch] = "3.x-dev"
 projects[migrate_tools][download][revision] = "7a40f5b"
 projects[migrate_tools][download][type] =" git"
 
