@@ -10,4 +10,4 @@ projects:
     subdir: ~
     download:
       url: https://github.com/poetic/clutch.git
-      branch: hosting/experiment
+      branch: hosting/master
