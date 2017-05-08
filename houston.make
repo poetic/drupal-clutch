@@ -80,7 +80,7 @@ projects[purge][subdir] = "contrib"
 projects[purge][version] = "3.0-beta6"
 
 projects[redirect][subdir] = "contrib"
-projects[redirect][version] = "^1.0@alpha"
+projects[redirect][version] = "1.0-alpha5"
 
 projects[special_menu_items][subdir] = "contrib"
 projects[special_menu_items][download][branch] = "1.x-dev"
