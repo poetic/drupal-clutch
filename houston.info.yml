@@ -13,8 +13,6 @@ dependencies:
   - coffee
   - color
   - config
-  - contact
-  - contact_storage
   - contextual
   - ctools
   - datetime
@@ -26,9 +24,7 @@ dependencies:
   - file
   - help
   - history
-  - iframe
   - image
-  - link_class
   - linkit
   - menu_link_content
   - menu_ui
@@ -45,6 +41,7 @@ dependencies:
   - quickedit
   - responsive_image
   - rdf
+  - redirect
   - search
   - shortcut
   - special_menu_items
@@ -55,6 +52,7 @@ dependencies:
   - tour
   - views
   - views_ui
+  - xmlsitemap
 themes:
   - classy
   - seven
